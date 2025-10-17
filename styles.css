@@ -1,4 +1,16 @@
 /* 基本スタイル */
+/* CSS変数のフォールバック */
+.primary-color { color: #007bff; }
+.secondary-color { color: #6c757d; }
+.success-color { color: #28a745; }
+.danger-color { color: #dc3545; }
+.light-bg { background-color: #f8f9fa; }
+.dark-text { color: #333; }
+.light-text { color: #fff; }
+.border-color { border-color: #ccc; }
+.shadow { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+/* モダンブラウザ用のCSS変数 */
 :root {
     --primary-color: #007bff;
     --secondary-color: #6c757d;
@@ -18,12 +30,19 @@
 }
 
 body { 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; 
     padding: 10px; 
-    color: var(--dark-text); 
-    background: linear-gradient(135deg, #fff0f5 0%, #ffe4e6 100%);
+    color: #333; 
+    background: #fff0f5;
     line-height: 1.6;
     min-height: 100vh;
+}
+
+/* モダンブラウザ用のグラデーション */
+@supports (background: linear-gradient(135deg, #fff0f5 0%, #ffe4e6 100%)) {
+    body {
+        background: linear-gradient(135deg, #fff0f5 0%, #ffe4e6 100%);
+    }
 }
 
 .container { max-width: 1100px; margin: 0 auto; padding: 0 5px; }
@@ -32,20 +51,20 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
 .step-guide { 
     text-align: center; 
     color: #666; 
-    background-color: var(--light-text); 
+    background-color: #fff; 
     padding: 12px; 
     border-radius: 8px; 
-    box-shadow: var(--shadow); 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
     margin-bottom: 25px; 
     font-size: 1em;
 }
-.step-guide .step { font-weight: bold; color: var(--primary-color); }
+.step-guide .step { font-weight: bold; color: #007bff; }
 
 .main-form-group { 
-    background-color: var(--light-text); 
+    background-color: #fff; 
     padding: 20px; 
     border-radius: 8px; 
-    box-shadow: var(--shadow); 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
     margin-bottom: 25px; 
 }
 .main-form-group label { 
@@ -57,10 +76,10 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
 .main-form-group select { 
     width: 100%; 
     padding: 15px; 
-    border: 1px solid var(--border-color); 
+    border: 1px solid #ccc; 
     border-radius: 4px; 
     font-size: 1.1em; 
-    background-color: var(--light-text);
+    background-color: #fff;
 }
 
 #calendar {
@@ -82,7 +101,7 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
     padding: 15px;
 }
 .modal-content { 
-    background: var(--light-text); 
+    background: #fff; 
     padding: 20px; 
     border-radius: 8px; 
     width: 100%; 
@@ -98,17 +117,31 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
 .form-group input, .form-group select { 
     width: 100%; 
     padding: 15px; 
-    border: 1px solid var(--border-color);
+    border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1.1em;
 }
 .form-group input[readonly] { background-color: #eee; }
 
 .form-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
     margin-top: 25px;
+}
+
+.form-actions button {
+    margin-bottom: 10px;
+}
+
+/* モダンブラウザ用のFlexbox */
+@supports (display: flex) {
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-actions button {
+        margin-bottom: 0;
+    }
 }
 .form-actions button {
     width: 100%;
@@ -123,21 +156,40 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
 .form-actions button:active {
     transform: scale(0.98);
 }
-.form-actions .btn-cancel { background-color: var(--secondary-color); color: var(--light-text); }
-.form-actions .btn-submit { background-color: var(--primary-color); color: var(--light-text); }
+.form-actions .btn-cancel { background-color: #6c757d; color: #fff; }
+.form-actions .btn-submit { background-color: #007bff; color: #fff; }
 .form-actions .btn-cancel:hover { background-color: #5a6268; }
 .form-actions .btn-submit:hover { background-color: #0056b3; }
 
 /* 時間選択モーダル */
 #timeSlotsContainer {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 12px;
     margin-top: 20px;
 }
+
 #timeSlotsContainer button {
-    background-color: var(--success-color);
-    color: var(--light-text);
+    display: inline-block;
+    width: 90px;
+    margin: 6px;
+    vertical-align: top;
+}
+
+/* モダンブラウザ用のGrid */
+@supports (display: grid) {
+    #timeSlotsContainer {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 12px;
+    }
+    
+    #timeSlotsContainer button {
+        display: block;
+        width: auto;
+        margin: 0;
+    }
+}
+#timeSlotsContainer button {
+    background-color: #28a745;
+    color: #fff;
     border: none;
     padding: 15px 5px;
     border-radius: 5px;
@@ -145,33 +197,55 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
     text-align: center;
     font-size: 1em;
     font-weight: bold;
-    transition: background-color 0.2s, transform 0.1s;
 }
 #timeSlotsContainer button:hover { background-color: #218838; }
 #timeSlotsContainer button:active { transform: scale(0.98); }
 #timeSlotsContainer .no-slots {
-    color: var(--danger-color);
+    color: #dc3545;
     text-align: center;
-    grid-column: 1 / -1;
     padding: 20px;
     background-color: #fbeaea;
     border-radius: 5px;
+    display: block;
+    width: 100%;
+    margin: 0;
+}
+
+/* モダンブラウザ用のGrid */
+@supports (display: grid) {
+    #timeSlotsContainer .no-slots {
+        grid-column: 1 / -1;
+    }
 }
 
 /* FullCalendar カスタマイズ */
 .fc-header-toolbar {
-    flex-direction: column;
-    gap: 10px;
     margin-bottom: 15px;
 }
+
 .fc-header-toolbar .fc-toolbar-chunk {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* モダンブラウザ用のFlexbox */
+@supports (display: flex) {
+    .fc-header-toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .fc-header-toolbar .fc-toolbar-chunk {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        text-align: left;
+        margin-bottom: 0;
+    }
 }
 .fc .fc-button {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: #007bff;
+    border-color: #007bff;
     font-size: 0.9em;
     padding: 8px 10px;
 }
@@ -186,11 +260,28 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
 
 /* ラジオボタンのスタイル */
 .radio-group {
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-    align-items: center;
     padding-top: 5px;
+}
+
+.radio-group label {
+    display: inline-block;
+    margin-right: 20px;
+    vertical-align: middle;
+}
+
+/* モダンブラウザ用のFlexbox */
+@supports (display: flex) {
+    .radio-group {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        align-items: center;
+    }
+    
+    .radio-group label {
+        display: inline-flex;
+        margin-right: 0;
+    }
 }
 .radio-group label {
     font-weight: normal;
@@ -208,10 +299,26 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
 }
 .checkbox-group label {
     font-weight: normal;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    display: inline-block;
     font-size: 1em;
+}
+
+.checkbox-group label input {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* モダンブラウザ用のFlexbox */
+@supports (display: flex) {
+    .checkbox-group label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .checkbox-group label input {
+        margin-right: 0;
+    }
 }
 #lengthExtensionOptions {
     display: none;
@@ -226,16 +333,26 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
     .modal-content {
         padding: 20px 15px;
     }
-    .radio-group {
-        gap: 50px;
-    }
     .radio-group label {
         font-size: 0.9em;
+        margin-right: 50px;
     }
     .radio-group label input {
         margin-right: 3px;
         width: 8px;
         height: 16px;
+    }
+}
+
+/* モダンブラウザ用のFlexbox */
+@supports (display: flex) {
+    @media (max-width: 480px) {
+        .radio-group {
+            gap: 50px;
+        }
+        .radio-group label {
+            margin-right: 0;
+        }
     }
 }
 
@@ -245,9 +362,15 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
     width: 20px;
     height: 20px;
     border: 3px solid #f3f3f3;
-    border-top: 3px solid var(--primary-color);
+    border-top: 3px solid #007bff;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+}
+
+/* モダンブラウザ用のアニメーション */
+@supports (animation: spin 1s linear infinite) {
+    .loading {
+        animation: spin 1s linear infinite;
+    }
 }
 
 @keyframes spin {
@@ -256,8 +379,10 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; 
 }
 
 /* パフォーマンス最適化 */
-.fc-event, .fc-daygrid-event, .fc-timegrid-event {
-    will-change: transform;
+@supports (will-change: transform) {
+    .fc-event, .fc-daygrid-event, .fc-timegrid-event {
+        will-change: transform;
+    }
 }
 
 /* アクセシビリティ向上 */
