@@ -22,6 +22,9 @@ var CONFIG = {
 };
 
 // 設定をグローバル変数に適用
-if (typeof GAS_API_URL === 'undefined') {
-    var GAS_API_URL = CONFIG.GAS_API_URL;
+var GAS_API_URL = CONFIG.GAS_API_URL;
+
+// 設定が正しく読み込まれているかチェック
+if (typeof console !== 'undefined' && console.log) {
+    console.log('Config loaded. GAS_API_URL:', GAS_API_URL);
 }

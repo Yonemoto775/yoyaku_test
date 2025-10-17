@@ -3,7 +3,11 @@ var calendar;
 var selectedStartTime;
 var busySlots = []; 
 var appConfig = {};
-var GAS_API_URL = ''; // Google Apps Script Web APIのURLを設定してください
+
+// GAS_API_URLが設定されていない場合は空文字列を設定
+if (typeof GAS_API_URL === 'undefined') {
+    var GAS_API_URL = '';
+}
 
 
 // パフォーマンス最適化のための遅延読み込み
@@ -28,14 +32,27 @@ function initializeApp() {
 function fetchInitialData(calendarEl) {
     var url = GAS_API_URL + '?action=getInitialData';
     
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('Fetching data from:', url);
+    }
+    
     fetch(url)
         .then(function(response) {
+            if (typeof console !== 'undefined' && console.log) {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+            }
+            
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
             }
             return response.json();
         })
         .then(function(data) {
+            if (typeof console !== 'undefined' && console.log) {
+                console.log('Received data:', data);
+            }
+            
             if (data.error) {
                 throw new Error(data.error);
             }
@@ -59,10 +76,15 @@ function fetchInitialData(calendarEl) {
             }
         })
         .catch(function(error) {
+            var errorMessage = 'Google Apps Script Web APIに接続できません。デフォルトメニューで動作します。';
+            var errorDetails = error.message || error.toString();
+            
             if (typeof console !== 'undefined' && console.error) {
                 console.error('Failed to fetch initial data:', error);
             }
-            showConnectionStatus('Google Apps Script Web APIに接続できません。デフォルトメニューで動作します。', 'warning');
+            
+            showConnectionStatus(errorMessage, 'warning', errorDetails);
+            
             // ヘルプ情報を表示する
             var helpInfo = document.getElementById('helpInfo');
             if (helpInfo) {
@@ -106,13 +128,25 @@ function initializeWithFallbackData(calendarEl) {
 }
 
 // 接続状況表示関数
-function showConnectionStatus(message, type) {
+function showConnectionStatus(message, type, errorDetails) {
     var statusDiv = document.getElementById('connectionStatus');
     var statusText = document.getElementById('statusText');
+    var configUrl = document.getElementById('configUrl');
+    var errorDetailsSpan = document.getElementById('errorDetails');
     
     if (statusDiv && statusText) {
         statusDiv.style.display = 'block';
         statusText.textContent = message;
+        
+        // 設定URLを表示
+        if (configUrl) {
+            configUrl.textContent = GAS_API_URL || '未設定';
+        }
+        
+        // エラー詳細を表示
+        if (errorDetailsSpan && errorDetails) {
+            errorDetailsSpan.textContent = errorDetails;
+        }
         
         // タイプに応じてスタイルを変更
         if (type === 'success') {
@@ -554,6 +588,55 @@ function fetchCreateReservation(reservationData, submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = '予約を確定する';
     });
+}
+
+// 接続テスト関数
+function testConnection() {
+    if (!GAS_API_URL) {
+        alert('Google Apps Script Web APIのURLが設定されていません。config.jsファイルを確認してください。');
+        return;
+    }
+    
+    var testUrl = GAS_API_URL + '?action=getInitialData';
+    showConnectionStatus('接続テスト中...', 'warning', '');
+    
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('Testing connection to:', testUrl);
+    }
+    
+    fetch(testUrl)
+        .then(function(response) {
+            if (typeof console !== 'undefined' && console.log) {
+                console.log('Test response status:', response.status);
+                console.log('Test response headers:', response.headers);
+            }
+            
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+            }
+            return response.text(); // まずテキストとして取得
+        })
+        .then(function(text) {
+            if (typeof console !== 'undefined' && console.log) {
+                console.log('Test response text:', text);
+            }
+            
+            try {
+                var data = JSON.parse(text);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                showConnectionStatus('接続テスト成功！', 'success', '');
+            } catch (parseError) {
+                throw new Error('JSON解析エラー: ' + parseError.message + '\nレスポンス: ' + text.substring(0, 200));
+            }
+        })
+        .catch(function(error) {
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Connection test failed:', error);
+            }
+            showConnectionStatus('接続テスト失敗', 'error', error.message);
+        });
 }
 
 // フォームリセット関数

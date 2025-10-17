@@ -55,6 +55,10 @@
         <h1>予約管理システム</h1>
         <div id="connectionStatus" style="display:none; background-color:#fff3cd; border:1px solid #ffeaa7; padding:10px; margin-bottom:20px; border-radius:4px;">
             <strong>接続状況:</strong> <span id="statusText">確認中...</span>
+            <div id="debugInfo" style="margin-top:10px; font-size:0.9em; color:#666;">
+                <div>設定URL: <span id="configUrl">未設定</span></div>
+                <div>エラー詳細: <span id="errorDetails">なし</span></div>
+            </div>
         </div>
         <div id="helpInfo" style="display:none; background-color:#e7f3ff; border:1px solid #b3d9ff; padding:15px; margin-bottom:20px; border-radius:4px; font-size:0.9em;">
             <strong>設定方法:</strong><br>
@@ -63,6 +67,11 @@
             3. スプレッドシートに「メニュー」シートを作成し、コース情報を入力してください<br>
             <div style="margin-top:10px; font-size:0.8em; color:#666;">
                 ヘッダー行: A列「コース名」、B列「施術時間（分）」、C列「価格（円）」
+            </div>
+            <div style="margin-top:10px;">
+                <button type="button" onclick="testConnection()" style="padding:5px 10px; background-color:#007bff; color:white; border:none; border-radius:3px; cursor:pointer;">
+                    接続テスト
+                </button>
             </div>
         </div>
         <div class="step-guide">
