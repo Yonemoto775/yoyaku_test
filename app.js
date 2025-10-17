@@ -612,13 +612,33 @@ function fetchCreateReservation(reservationData, submitButton) {
 
 // 直接アクセステスト関数
 function testDirectAccess() {
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('testDirectAccess called');
+        console.log('GAS_API_URL:', GAS_API_URL);
+    }
+    
     if (!GAS_API_URL || GAS_API_URL === '' || GAS_API_URL === 'undefined') {
         alert('Google Apps Script Web APIのURLが設定されていません。');
         return;
     }
     
+    var testUrl = GAS_API_URL + '?action=getInitialData';
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('Opening URL:', testUrl);
+    }
+    
     // 新しいタブで直接アクセス
-    window.open(GAS_API_URL + '?action=getInitialData', '_blank');
+    try {
+        window.open(testUrl, '_blank');
+        if (typeof console !== 'undefined' && console.log) {
+            console.log('Window.open executed successfully');
+        }
+    } catch (error) {
+        if (typeof console !== 'undefined' && console.error) {
+            console.error('Error opening window:', error);
+        }
+        alert('新しいタブを開けませんでした: ' + error.message);
+    }
 }
 
 // 接続テスト関数
@@ -890,6 +910,36 @@ function setupEventListeners() {
             submitButton.attachEvent('onclick', function() {
                 // 同じ処理をここにも実装する必要がありますが、簡略化のため省略
             });
+        }
+    }
+    
+    // 直接アクセステストボタンのイベントリスナー
+    var directTestBtn = document.getElementById('directTestBtn');
+    if (directTestBtn) {
+        if (typeof console !== 'undefined' && console.log) {
+            console.log('Direct test button found, adding event listener');
+        }
+        
+        if (directTestBtn.addEventListener) {
+            directTestBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (typeof console !== 'undefined' && console.log) {
+                    console.log('Direct test button clicked via addEventListener');
+                }
+                testDirectAccess();
+            });
+        } else if (directTestBtn.attachEvent) {
+            directTestBtn.attachEvent('onclick', function(e) {
+                e.preventDefault();
+                if (typeof console !== 'undefined' && console.log) {
+                    console.log('Direct test button clicked via attachEvent');
+                }
+                testDirectAccess();
+            });
+        }
+    } else {
+        if (typeof console !== 'undefined' && console.error) {
+            console.error('Direct test button not found');
         }
     }
 }
