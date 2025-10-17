@@ -9,6 +9,12 @@ if (typeof GAS_API_URL === 'undefined') {
     var GAS_API_URL = '';
 }
 
+// 設定の読み込み状況をデバッグ
+if (typeof console !== 'undefined' && console.log) {
+    console.log('App.js loaded. GAS_API_URL:', GAS_API_URL);
+    console.log('GAS_API_URL type:', typeof GAS_API_URL);
+}
+
 
 // パフォーマンス最適化のための遅延読み込み
 function initializeApp() {
@@ -28,6 +34,11 @@ function initializeApp() {
         showConnectionStatus('Google Apps Script Web APIのURLが設定されていません。デフォルトメニューで動作します。', 'warning', 'config.jsファイルのGAS_API_URLが設定されていません');
         initializeWithFallbackData(calendarEl);
         return;
+    }
+    
+    // 設定が正しく読み込まれている場合
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('GAS_API_URL is configured:', GAS_API_URL);
     }
     
     // 最初にアプリの初期データ（設定＋メニュー）を取得
@@ -147,6 +158,9 @@ function showConnectionStatus(message, type, errorDetails) {
         // 設定URLを表示
         if (configUrl) {
             configUrl.textContent = GAS_API_URL || '未設定';
+            if (typeof console !== 'undefined' && console.log) {
+                console.log('Setting configUrl to:', GAS_API_URL || '未設定');
+            }
         }
         
         // エラー詳細を表示
