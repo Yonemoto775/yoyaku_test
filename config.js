@@ -27,4 +27,5 @@ var GAS_API_URL = CONFIG.GAS_API_URL;
 // 設定が正しく読み込まれているかチェック
 if (typeof console !== 'undefined' && console.log) {
     console.log('Config loaded. GAS_API_URL:', GAS_API_URL);
+    console.log('CONFIG object:', CONFIG);
 }

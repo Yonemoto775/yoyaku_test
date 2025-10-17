@@ -14,12 +14,18 @@ if (typeof GAS_API_URL === 'undefined') {
 function initializeApp() {
     var calendarEl = document.getElementById('calendar');
     
+    // 設定の読み込み状況をデバッグ
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('GAS_API_URL value:', GAS_API_URL);
+        console.log('GAS_API_URL type:', typeof GAS_API_URL);
+    }
+    
     // Google Apps Script Web APIの利用可能性をチェック
-    if (!GAS_API_URL) {
+    if (!GAS_API_URL || GAS_API_URL === '' || GAS_API_URL === 'undefined') {
         if (typeof console !== 'undefined' && console.warn) {
             console.warn('Google Apps Script Web API URL not configured, using fallback data');
         }
-        showConnectionStatus('Google Apps Script Web APIのURLが設定されていません。デフォルトメニューで動作します。', 'warning');
+        showConnectionStatus('Google Apps Script Web APIのURLが設定されていません。デフォルトメニューで動作します。', 'warning', 'config.jsファイルのGAS_API_URLが設定されていません');
         initializeWithFallbackData(calendarEl);
         return;
     }
@@ -592,8 +598,13 @@ function fetchCreateReservation(reservationData, submitButton) {
 
 // 接続テスト関数
 function testConnection() {
-    if (!GAS_API_URL) {
-        alert('Google Apps Script Web APIのURLが設定されていません。config.jsファイルを確認してください。');
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('testConnection called');
+        console.log('GAS_API_URL:', GAS_API_URL);
+    }
+    
+    if (!GAS_API_URL || GAS_API_URL === '' || GAS_API_URL === 'undefined') {
+        alert('Google Apps Script Web APIのURLが設定されていません。config.jsファイルを確認してください。\n現在の値: ' + GAS_API_URL);
         return;
     }
     
@@ -602,6 +613,12 @@ function testConnection() {
     
     if (typeof console !== 'undefined' && console.log) {
         console.log('Testing connection to:', testUrl);
+    }
+    
+    // fetch APIが利用可能かチェック
+    if (typeof fetch === 'undefined') {
+        showConnectionStatus('接続テスト失敗', 'error', 'fetch APIが利用できません。ブラウザが古すぎる可能性があります。');
+        return;
     }
     
     fetch(testUrl)
