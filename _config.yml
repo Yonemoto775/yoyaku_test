@@ -1,0 +1,29 @@
+# GitHub Pages設定
+title: 予約管理システム
+description: ネイルサロン向け予約管理システム
+author: CARAT
+baseurl: ""
+url: ""
+
+# プラグイン設定
+plugins:
+  - jekyll-sitemap
+  - jekyll-feed
+
+# 除外ファイル
+exclude:
+  - README.md
+  - code.js
+  - .gitignore
+  - .nojekyll
+
+# 含めるファイル
+include:
+  - _redirects
+
+# デフォルト設定
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

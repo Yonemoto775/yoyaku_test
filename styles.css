@@ -1,0 +1,271 @@
+/* 基本スタイル */
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --light-bg: #f8f9fa;
+    --dark-text: #333;
+    --light-text: #fff;
+    --border-color: #ccc;
+    --shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+    padding: 10px; 
+    color: var(--dark-text); 
+    background: linear-gradient(135deg, #fff0f5 0%, #ffe4e6 100%);
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+    min-height: 100vh;
+}
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 5px; }
+h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; }
+
+.step-guide { 
+    text-align: center; 
+    color: #666; 
+    background-color: var(--light-text); 
+    padding: 12px; 
+    border-radius: 8px; 
+    box-shadow: var(--shadow); 
+    margin-bottom: 25px; 
+    font-size: 1em;
+}
+.step-guide .step { font-weight: bold; color: var(--primary-color); }
+
+.main-form-group { 
+    background-color: var(--light-text); 
+    padding: 20px; 
+    border-radius: 8px; 
+    box-shadow: var(--shadow); 
+    margin-bottom: 25px; 
+}
+.main-form-group label { 
+    display: block; 
+    margin-bottom: 10px; 
+    font-weight: bold; 
+    font-size: 1.1em; 
+}
+.main-form-group select { 
+    width: 100%; 
+    padding: 15px; 
+    border: 1px solid var(--border-color); 
+    border-radius: 4px; 
+    font-size: 1.1em; 
+    background-color: var(--light-text);
+}
+
+#calendar {
+    margin-bottom: 30px;
+}
+
+/* モーダル共通スタイル */
+.modal-overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.6); 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1000; 
+    padding: 15px;
+}
+.modal-content { 
+    background: var(--light-text); 
+    padding: 20px; 
+    border-radius: 8px; 
+    width: 100%; 
+    max-width: 500px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+    max-height: 85vh;
+    overflow-y: auto;
+}
+.modal-content h2 { margin-top: 0; margin-bottom: 15px; font-size: 1.3em; }
+
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 1em; }
+.form-group input, .form-group select { 
+    width: 100%; 
+    padding: 15px; 
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1.1em;
+}
+.form-group input[readonly] { background-color: #eee; }
+
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 25px;
+}
+.form-actions button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
+    font-size: 1.1em;
+}
+.form-actions button:active {
+    transform: scale(0.98);
+}
+.form-actions .btn-cancel { background-color: var(--secondary-color); color: var(--light-text); }
+.form-actions .btn-submit { background-color: var(--primary-color); color: var(--light-text); }
+.form-actions .btn-cancel:hover { background-color: #5a6268; }
+.form-actions .btn-submit:hover { background-color: #0056b3; }
+
+/* 時間選択モーダル */
+#timeSlotsContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+#timeSlotsContainer button {
+    background-color: var(--success-color);
+    color: var(--light-text);
+    border: none;
+    padding: 15px 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
+}
+#timeSlotsContainer button:hover { background-color: #218838; }
+#timeSlotsContainer button:active { transform: scale(0.98); }
+#timeSlotsContainer .no-slots {
+    color: var(--danger-color);
+    text-align: center;
+    grid-column: 1 / -1;
+    padding: 20px;
+    background-color: #fbeaea;
+    border-radius: 5px;
+}
+
+/* FullCalendar カスタマイズ */
+.fc-header-toolbar {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.fc-header-toolbar .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+.fc .fc-button {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    font-size: 0.9em;
+    padding: 8px 10px;
+}
+.fc .fc-button:hover {
+    background-color: #0056b3;
+}
+.fc .fc-toolbar-title { font-size: 1.5em; }
+.fc-event {
+    background-color: rgba(233, 236, 239, 0.8);
+    border: none;
+}
+
+/* ラジオボタンのスタイル */
+.radio-group {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: center;
+    padding-top: 5px;
+}
+.radio-group label {
+    font-weight: normal;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+.radio-group label input {
+    margin-right: 3px;
+}
+.checkbox-group {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+.checkbox-group label {
+    font-weight: normal;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1em;
+}
+#lengthExtensionOptions {
+    display: none;
+    margin-left: 28px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* スマートフォン向けの調整 */
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 20px 15px;
+    }
+    .radio-group {
+        gap: 50px;
+    }
+    .radio-group label {
+        font-size: 0.9em;
+    }
+    .radio-group label input {
+        margin-right: 3px;
+        width: 8px;
+        height: 16px;
+    }
+}
+
+/* ローディングアニメーション */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* パフォーマンス最適化 */
+.fc-event, .fc-daygrid-event, .fc-timegrid-event {
+    will-change: transform;
+}
+
+/* アクセシビリティ向上 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
