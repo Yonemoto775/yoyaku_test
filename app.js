@@ -3,70 +3,74 @@ var calendar;
 var selectedStartTime;
 var busySlots = []; 
 var appConfig = {};
+var GAS_API_URL = ''; // Google Apps Script Web APIのURLを設定してください
 
 
 // パフォーマンス最適化のための遅延読み込み
 function initializeApp() {
     var calendarEl = document.getElementById('calendar');
     
-    // Google Apps Script APIの利用可能性をチェック
-    if (typeof google === 'undefined' || !google.script || !google.script.run) {
+    // Google Apps Script Web APIの利用可能性をチェック
+    if (!GAS_API_URL) {
         if (typeof console !== 'undefined' && console.warn) {
-            console.warn('Google Apps Script API not available, using fallback data');
+            console.warn('Google Apps Script Web API URL not configured, using fallback data');
         }
-        // Google Apps Scriptが利用できない場合のフォールバック
+        showConnectionStatus('Google Apps Script Web APIのURLが設定されていません。デフォルトメニューで動作します。', 'warning');
         initializeWithFallbackData(calendarEl);
         return;
     }
     
     // 最初にアプリの初期データ（設定＋メニュー）を取得
-    try {
-        google.script.run.withSuccessHandler(function(initialData) {
+    fetchInitialData(calendarEl);
+}
+
+// Google Apps Script Web APIから初期データを取得
+function fetchInitialData(calendarEl) {
+    var url = GAS_API_URL + '?action=getInitialData';
+    
+    fetch(url)
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
             // 1. アプリ設定をグローバル変数に保存
-            appConfig = initialData.config;
+            appConfig = data.config;
             
             // 2. コース選択のプルダウンを生成
-            populateCourseSelect(initialData.menuItems);
+            populateCourseSelect(data.menuItems);
 
             // 3. カレンダーを初期化
             initializeCalendar(calendarEl);
             
-    // 接続成功を表示
-    showConnectionStatus('Google Apps Scriptに正常に接続しました。', 'success');
-    
-    // ヘルプ情報を非表示にする
-    var helpInfo = document.getElementById('helpInfo');
-    if (helpInfo) {
-        helpInfo.style.display = 'none';
-    }
-        }).withFailureHandler(function(error) {
-            // サーバーからデータを取得できなかった場合のエラー表示
-            var errorMessage = 'アプリケーションの読み込みに失敗しました';
-            if (error && error.message) {
-                errorMessage += ': ' + error.message;
+            // 接続成功を表示
+            showConnectionStatus('Google Apps Script Web APIに正常に接続しました。', 'success');
+            
+            // ヘルプ情報を非表示にする
+            var helpInfo = document.getElementById('helpInfo');
+            if (helpInfo) {
+                helpInfo.style.display = 'none';
             }
-        showConnectionStatus(errorMessage, 'error');
-        // ヘルプ情報を表示する
-        var helpInfo = document.getElementById('helpInfo');
-        if (helpInfo) {
-            helpInfo.style.display = 'block';
-        }
-        // エラー時もフォールバックデータで初期化
-        initializeWithFallbackData(calendarEl);
-        }).getInitialData();
-    } catch (e) {
-        if (typeof console !== 'undefined' && console.error) {
-            console.error('Google Apps Script API call failed:', e);
-        }
-        showConnectionStatus('Google Apps Script APIの呼び出しに失敗しました。', 'error');
-        // ヘルプ情報を表示する
-        var helpInfo = document.getElementById('helpInfo');
-        if (helpInfo) {
-            helpInfo.style.display = 'block';
-        }
-        // 例外発生時もフォールバックデータで初期化
-        initializeWithFallbackData(calendarEl);
-    }
+        })
+        .catch(function(error) {
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Failed to fetch initial data:', error);
+            }
+            showConnectionStatus('Google Apps Script Web APIに接続できません。デフォルトメニューで動作します。', 'warning');
+            // ヘルプ情報を表示する
+            var helpInfo = document.getElementById('helpInfo');
+            if (helpInfo) {
+                helpInfo.style.display = 'block';
+            }
+            // エラー時もフォールバックデータで初期化
+            initializeWithFallbackData(calendarEl);
+        });
 }
 
 // フォールバック用の初期化関数
