@@ -227,40 +227,11 @@ function initializeCalendar(calendarEl) {
         slotMinTime: `${appConfig.startHour}:00:00`,
         slotMaxTime: `${appConfig.endHour}:00:00`,
         events: function(fetchInfo, successCallback, failureCallback) {
-            // Google Apps Script APIが利用可能かチェック
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                try {
-                    google.script.run
-                        .withSuccessHandler(function(slots) {
-                            if (slots && Array.isArray(slots)) {
-                                busySlots = slots.map(function(slot) {
-                                    return {
-                                        start: new Date(slot.start),
-                                        end: new Date(slot.end)
-                                    };
-                                });
-                            } else {
-                                busySlots = [];
-                            }
-                            successCallback(busySlots);
-                        })
-                        .withFailureHandler(function(error) {
-                            if (typeof console !== 'undefined' && console.error) {
-                                console.error('Failed to fetch busy slots:', error);
-                            }
-                            busySlots = [];
-                            successCallback([]);
-                        })
-                        .getBusySlots();
-                } catch (e) {
-                    if (typeof console !== 'undefined' && console.error) {
-                        console.error('Google Apps Script API call failed:', e);
-                    }
-                    busySlots = [];
-                    successCallback([]);
-                }
+            // Google Apps Script Web APIが利用可能かチェック
+            if (GAS_API_URL) {
+                fetchBusySlots(successCallback, failureCallback);
             } else {
-                // Google Apps Script APIが利用できない場合は空の配列を返す
+                // Google Apps Script Web APIが利用できない場合は空の配列を返す
                 busySlots = [];
                 successCallback([]);
             }
@@ -494,46 +465,95 @@ function sendReservationDataToServer(reservationData) {
     submitButton.disabled = true;
     submitButton.textContent = '処理中...';
 
-    // Google Apps Script APIが利用可能かチェック
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-        try {
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    alert(result.message);
-                    if (result.success) {
-                        hideReservationModal();
-                        resetForm();
-                        if (calendar && calendar.refetchEvents) {
-                            calendar.refetchEvents();
-                        }
-                    }
-                    submitButton.disabled = false;
-                    submitButton.textContent = '予約を確定する';
-                })
-                .withFailureHandler(function(error) {
-                    var errorMessage = 'エラーが発生しました';
-                    if (error && error.message) {
-                        errorMessage += ': ' + error.message;
-                    }
-                    alert(errorMessage);
-                    submitButton.disabled = false;
-                    submitButton.textContent = '予約を確定する';
-                })
-                .createReservation(reservationData);
-        } catch (e) {
-            if (typeof console !== 'undefined' && console.error) {
-                console.error('Google Apps Script API call failed:', e);
-            }
-            alert('予約システムに接続できません。しばらく時間をおいてから再度お試しください。');
-            submitButton.disabled = false;
-            submitButton.textContent = '予約を確定する';
-        }
+    // Google Apps Script Web APIが利用可能かチェック
+    if (GAS_API_URL) {
+        fetchCreateReservation(reservationData, submitButton);
     } else {
-        // Google Apps Script APIが利用できない場合
+        // Google Apps Script Web APIが利用できない場合
         alert('予約システムに接続できません。Google Apps Scriptの設定を確認してください。');
         submitButton.disabled = false;
         submitButton.textContent = '予約を確定する';
     }
+}
+
+// Google Apps Script Web APIから予約済み時間を取得
+function fetchBusySlots(successCallback, failureCallback) {
+    var url = GAS_API_URL + '?action=getBusySlots';
+    
+    fetch(url)
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(function(slots) {
+            if (slots.error) {
+                throw new Error(slots.error);
+            }
+            
+            if (slots && Array.isArray(slots)) {
+                busySlots = slots.map(function(slot) {
+                    return {
+                        start: new Date(slot.start),
+                        end: new Date(slot.end)
+                    };
+                });
+            } else {
+                busySlots = [];
+            }
+            successCallback(busySlots);
+        })
+        .catch(function(error) {
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Failed to fetch busy slots:', error);
+            }
+            busySlots = [];
+            successCallback([]);
+        });
+}
+
+// Google Apps Script Web APIに予約データを送信
+function fetchCreateReservation(reservationData, submitButton) {
+    var url = GAS_API_URL;
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reservationData)
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(function(result) {
+        alert(result.message);
+        if (result.success) {
+            hideReservationModal();
+            resetForm();
+            if (calendar && calendar.refetchEvents) {
+                calendar.refetchEvents();
+            }
+        }
+        submitButton.disabled = false;
+        submitButton.textContent = '予約を確定する';
+    })
+    .catch(function(error) {
+        if (typeof console !== 'undefined' && console.error) {
+            console.error('Failed to create reservation:', error);
+        }
+        var errorMessage = 'エラーが発生しました';
+        if (error && error.message) {
+            errorMessage += ': ' + error.message;
+        }
+        alert(errorMessage);
+        submitButton.disabled = false;
+        submitButton.textContent = '予約を確定する';
+    });
 }
 
 // フォームリセット関数
