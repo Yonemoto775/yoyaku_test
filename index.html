@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <script>
+        // Instagram内のWebブラウザで開かれた場合に標準ブラウザで開くようにリダイレクト
+        (function() {
+            // Instagram内のWebブラウザを検出
+            function isInstagramBrowser() {
+                // Instagram内のWebブラウザの特徴を検出
+                const userAgent = navigator.userAgent.toLowerCase();
+                const isInstagram = userAgent.includes('instagram') || 
+                                   userAgent.includes('igwebview') ||
+                                   userAgent.includes('instagramwebview');
+                
+                // 画面サイズやその他の特徴もチェック
+                const isMobile = /android|iphone|ipad|ipod|blackberry|windows phone/i.test(userAgent);
+                const isInApp = window.navigator.standalone || 
+                               document.referrer.includes('instagram.com') ||
+                               window.location.href.includes('instagram.com');
+                
+                return isInstagram || (isMobile && isInApp);
+            }
+            
+            // Instagram内のブラウザで開かれた場合の処理
+            if (isInstagramBrowser()) {
+                // 現在のURLを取得
+                const currentUrl = window.location.href;
+                
+                // 標準ブラウザで開くためのURLスキームを使用
+                // iOSの場合
+                if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+                    // Safariで開く
+                    window.location.href = 'x-web-search://' + currentUrl;
+                } 
+                // Androidの場合
+                else if (/android/i.test(navigator.userAgent)) {
+                    // Chromeで開く
+                    window.location.href = 'googlechrome://navigate?url=' + encodeURIComponent(currentUrl);
+                }
+                // その他の場合
+                else {
+                    // 新しいウィンドウで開く
+                    window.open(currentUrl, '_system');
+                }
+                
+                // リダイレクトが失敗した場合のフォールバック
+                setTimeout(function() {
+                    // リダイレクトが成功しなかった場合、ユーザーに手動で開くよう促す
+                    if (document.hidden || document.webkitHidden) {
+                        return; // ページが非表示になった場合はリダイレクト成功
+                    }
+                    
+                    // 手動で開くためのガイダンスを表示
+                    const message = document.createElement('div');
+                    message.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.9);
+                        color: white;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 9999;
+                        text-align: center;
+                        padding: 20px;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                    `;
+                    message.innerHTML = `
+                        <h2 style="margin-bottom: 20px;">📱 ブラウザで開いてください</h2>
+                        <p style="margin-bottom: 15px; line-height: 1.6;">
+                            Instagram内のブラウザでは正常に動作しません。<br>
+                            以下の方法で標準ブラウザで開いてください：
+                        </p>
+                        <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <p style="margin-bottom: 10px;"><strong>iOSの場合：</strong></p>
+                            <p>右上の「...」→「Safariで開く」をタップ</p>
+                            <p style="margin-top: 10px;"><strong>Androidの場合：</strong></p>
+                            <p>右上の「...」→「ブラウザで開く」をタップ</p>
+                        </div>
+                        <button onclick="window.open('${currentUrl}', '_blank')" 
+                                style="padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer;">
+                            新しいタブで開く
+                        </button>
+                    `;
+                    document.body.appendChild(message);
+                }, 2000);
+            }
+        })();
+    </script>
+    <style>
+        /* 基本スタイル */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --light-bg: #f8f9fa;
+            --dark-text: #333;
+            --light-text: #fff;
+            --border-color: #ccc;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+         * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+         body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            padding: 10px; 
+            color: var(--dark-text); 
+            background-color: #fff0f5; /* 背景をピンクに変更 */
+            line-height: 1.6;
+            -webkit-text-size-adjust: 100%; /* iOSでの文字サイズ自動調整を無効化 */
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 5px; }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 1.8em; }
+        
+        .step-guide { 
+            text-align: center; 
+            color: #666; 
+            background-color: var(--light-text); 
+            padding: 12px; 
+            border-radius: 8px; 
+            box-shadow: var(--shadow); 
+            margin-bottom: 25px; 
+            font-size: 1em;
+        }
+        .step-guide .step { font-weight: bold; color: var(--primary-color); }
+        
+        .main-form-group { 
+            background-color: var(--light-text); 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: var(--shadow); 
+            margin-bottom: 25px; 
+        }
+        .main-form-group label { 
+            display: block; 
+            margin-bottom: 10px; 
+            font-weight: bold; 
+            font-size: 1.1em; 
+        }
+        .main-form-group select { 
+            width: 100%; 
+            padding: 15px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 4px; 
+            font-size: 1.1em; 
+            background-color: var(--light-text);
+        }
+         #calendar {
+            margin-bottom: 30px; /* カレンダー下の余白を追加 */
+        }
+        
+        /* モーダル共通スタイル */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0, 0, 0, 0.6); 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000; 
+            padding: 15px;
+        }
+        .modal-content { 
+            background: var(--light-text); 
+            padding: 20px; 
+            border-radius: 8px; 
+            width: 100%; 
+            max-width: 500px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            max-height: 85vh; /* 画面の高さの85%を最大値に */
+            overflow-y: auto; /* 内容がはみ出た場合にスクロールを許可 */
+        }
+        .modal-content h2 { margin-top: 0; margin-bottom: 15px; font-size: 1.3em; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 1em; }
+        .form-group input, .form-group select { 
+            width: 100%; 
+            padding: 15px; 
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1.1em;
+        }
+        .form-group input[readonly] { background-color: #eee; }
+         .form-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        .form-actions button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
+            font-size: 1.1em;
+        }
+        .form-actions button:active {
+            transform: scale(0.98);
+        }
+        .form-actions .btn-cancel { background-color: var(--secondary-color); color: var(--light-text); }
+        .form-actions .btn-submit { background-color: var(--primary-color); color: var(--light-text); }
+        .form-actions .btn-cancel:hover { background-color: #5a6268; }
+        .form-actions .btn-submit:hover { background-color: #0056b3; }
+         /* 時間選択モーダル */
+        #timeSlotsContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        #timeSlotsContainer button {
+            background-color: var(--success-color);
+            color: var(--light-text);
+            border: none;
+            padding: 15px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        #timeSlotsContainer button:hover { background-color: #218838; }
+        #timeSlotsContainer button:active { transform: scale(0.98); }
+        #timeSlotsContainer .no-slots {
+            color: var(--danger-color);
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 20px;
+            background-color: #fbeaea;
+            border-radius: 5px;
+        }
+         /* FullCalendar カスタマイズ */
+        .fc-header-toolbar {
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .fc-header-toolbar .fc-toolbar-chunk {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .fc .fc-button {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-size: 0.9em;
+            padding: 8px 10px;
+        }
+        .fc .fc-button:hover {
+            background-color: #0056b3;
+        }
+        .fc .fc-toolbar-title { font-size: 1.5em; }
+        .fc-event {
+            background-color: rgba(233, 236, 239, 0.8);
+            border: none;
+        }
+        /* ラジオボタンのスタイル */
+        .radio-group {
+            display: flex;
+            flex-direction: row; /* 横並びを明示 */
+            gap: 20px; /* PC表示でのボタン間の余白 */
+            align-items: center;
+            padding-top: 5px;
+        }
+        .radio-group label {
+            font-weight: normal;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap; /* ラベル内のテキストが改行されるのを防ぐ */
+        }
+        .radio-group label input {
+            margin-right: 3px; /* ラジオボタンと文字の間隔 */
+        }
+        .checkbox-group {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        .checkbox-group label {
+            font-weight: normal;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1em;
+        }
+        #lengthExtensionOptions {
+            display: none;
+            margin-left: 28px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+         /* --- ここからスマートフォン向けの調整 --- */
+        /* 画面幅が480px以下の時に適用されます */
+        @media (max-width: 480px) {
+            /*
+             * ★★★ スマホ表示の調整箇所 ★★★
+             * ここの数値を変更することで、スマホでの表示を微調整できます。
+             */
+            .modal-content {
+                /* ポップアップ全体の左右の余白です。 */
+                padding: 20px 15px;
+            }
+            .radio-group {
+                /* ボタン同士の間隔です。数値を小さくすると間が詰まります。 */
+                gap: 50px;
+            }
+            .radio-group label {
+                /* 文字の大きさです。数値を小さくすると文字が小さくなります。 */
+                font-size: 0.9em;
+            }
+            .radio-group label input {
+                /* ラジオボタンの●と文字の間隔です。 */
+                margin-right: 3px;
+                /* ラジオボタンの●自体のサイズです。 */
+                width: 8px;
+                height: 16px;
+            }
+        }
+        /* --- スマートフォン向けの調整ここまで --- */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>予約管理システム</h1>
+        <div class="step-guide">
+            <span class="step">Step 1:</span> コース・オフの有無を選択 → <span class="step">Step 2:</span> 日付を選択
+            <p style="font-size:0.8em; margin-top:5px; color:#555;">※コース等を変更した場合は、再度日付をクリックしてください。</p>
+        </div>
+         <div class="main-form-group">
+            <label for="courseSelect">ご希望のコース</label>
+            <select id="courseSelect">
+                <!-- スクリプトによって動的に読み込まれます -->
+            </select>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="nailOffCheck"> ジェルオフ (+30分)</label>
+            </div>
+            <div class="checkbox-group" style="padding-top: 10px; border-top: none;">
+                <label><input type="checkbox" id="lengthExtensionCheck"> 長さ出し</label>
+                <div id="lengthExtensionOptions">
+                    <select id="lengthExtensionCount"></select>
+                </div>
+            </div>
+        </div>
+        
+        <div id='calendar'></div>
+    </div>
+     <!-- 時間選択モーダル -->
+    <div id="timeSlotsModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="timeSlotsTitle"></h2>
+            <p>ご希望の開始時間を選択してください。</p>
+            <div id="timeSlotsContainer"></div>
+            <div class="form-actions">
+                <button type="button" id="timeSlotsCancelButton" class="btn-cancel">戻る</button>
+            </div>
+        </div>
+    </div>
+     <!-- 予約情報入力モーダル -->
+    <div id="reservationModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>予約情報の入力</h2>
+            <div class="form-group">
+                <label>予約日時</label>
+                <input type="text" id="selectedTime" readonly style="background:#eee;">
+            </div>
+            <div class="form-group">
+                <label>ご予約内容</label>
+                <div id="reservationSummary" style="padding: 10px 12px; background: #eee; border-radius: 4px; font-size: 0.95em; line-height: 1.5;"></div>
+            </div>
+            <div class="form-group">
+                <label for="name">お名前</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">メールアドレス</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">電話番号</label>
+                <input type="tel" id="phone" required>
+            </div>
+            <div class="form-group">
+                <label for="designImage">デザイン画像 (任意)</label>
+                <input type="file" id="designImage" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label>MENU</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="menu_type" value="HAND" checked> HAND</label>
+                    <label><input type="radio" name="menu_type" value="FOOT"> FOOT</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>ご来店回数</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="visit" value="初回" checked> 初回</label>
+                    <label><input type="radio" name="visit" value="2回目以降"> 2回目以降</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>担当者指名</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="staff_assignment" value="指名なし" checked> 指名なし</label>
+                    <label><input type="radio" name="staff_assignment" value="指名あり"> 指名あり (+400円)</label>
+                </div>
+                <div id="staffSelectionContainer" style="display: none; margin-top: 10px;">
+                    <select id="staffSelect" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="">担当者を選択してください</option>
+                        <option value="スタッフA">かのん</option>
+                        <option value="スタッフB">しの</option>
+                        <option value="スタッフC">りな</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="cancelButton" class="btn-cancel">キャンセル</button>
+                <button type="button" id="submitButton" class="btn-submit">予約を確定する</button>
+            </div>
+        </div>
+    </div>
+     <script>
+        let calendar;
+        let selectedStartTime;
+        let busySlots = []; 
+        let appConfig = {}; // アプリ設定をグローバルに保持
+             document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+            
+            // Instagram内のWebブラウザでのGoogle Apps Script APIの利用可能性をチェック
+            if (typeof google === 'undefined' || !google.script || !google.script.run) {
+                // Instagram内のブラウザでGoogle Apps Scriptが利用できない場合
+                console.warn('Google Apps Script API not available - Instagram browser detected');
+                alert('Instagram内のブラウザでは正常に動作しません。\nSafariやChrome等のブラウザでお試しください。');
+                return;
+            }
+            
+            // 最初にアプリの初期データ（設定＋メニュー）を取得
+            google.script.run.withSuccessHandler(function(initialData) {
+                // 1. アプリ設定をグローバル変数に保存
+                appConfig = initialData.config;
+                
+                // 2. コース選択のプルダウンを生成
+                populateCourseSelect(initialData.menuItems);
+                 // 3. カレンダーを初期化
+                initializeCalendar(calendarEl);
+            }).withFailureHandler(function(error) {
+                // サーバーからデータを取得できなかった場合のエラー表示
+                alert('アプリケーションの読み込みに失敗しました: ' + error.message);
+            }).getInitialData(); // 新しい関数を呼び出す
+        });
+         /**
+         * サーバーから取得したメニュー項目でコース選択プルダウンを生成する
+         * @param {Array} menuItems - メニュー項目の配列
+         */
+        function populateCourseSelect(menuItems) {
+            const courseSelect = document.getElementById('courseSelect');
+            if (!courseSelect) {
+                console.error('Course select element not found');
+                return;
+            }
+            
+            courseSelect.innerHTML = ''; // 既存のオプションをクリア
+             if (!menuItems || menuItems.length === 0) {
+                courseSelect.innerHTML = '<option value="">コースがありません</option>';
+                courseSelect.disabled = true;
+                return;
+            }
+             // 元のコードで90分が選択されていたのを参考に、90分のコースをデフォルトで選択する
+            let defaultSelectedIndex = menuItems.findIndex(item => item.duration == 90);
+            if (defaultSelectedIndex === -1) defaultSelectedIndex = 0; // 90分がなければ最初の項目
+             menuItems.forEach((item, index) => {
+                const option = document.createElement('option');
+                option.value = item.duration;
+                option.dataset.price = item.price;
+                option.dataset.name = item.name;
+                option.textContent = `${item.name} (${item.duration}分)`;
+                if (index === defaultSelectedIndex) option.selected = true;
+                courseSelect.appendChild(option);
+            });
+             // 長さ出しの本数選択プルダウンを生成
+            const lengthExtensionCountSelect = document.getElementById('lengthExtensionCount');
+            if (lengthExtensionCountSelect) {
+                for (let i = 1; i <= 10; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    let text = `${i}本`;
+                    if (i >= 4) {
+                        text += ' (+3,500円)';
+                    }
+                    option.textContent = text;
+                    lengthExtensionCountSelect.appendChild(option);
+                }
+            }
+             // 長さ出しチェックボックスのイベントリスナー
+            const lengthExtensionCheck = document.getElementById('lengthExtensionCheck');
+            if (lengthExtensionCheck) {
+                lengthExtensionCheck.addEventListener('change', () => {
+                    const lengthExtensionOptions = document.getElementById('lengthExtensionOptions');
+                    if (lengthExtensionOptions) {
+                        lengthExtensionOptions.style.display = lengthExtensionCheck.checked ? 'block' : 'none';
+                    }
+                });
+            }
+        }
+         function initializeCalendar(calendarEl) {
+            // Google Apps Scriptから取得した設定値を利用
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth', // UIを統一
+                locale: 'ja',
+                validRange: {
+                    start: new Date() // 開始日を今日に設定
+                },
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridDay' // UIを統一
+                },
+                buttonText: { today: '今日', month: '月', week: '週', day: '日' },
+                allDaySlot: false,
+                slotMinTime: `${appConfig.startHour}:00:00`,
+                slotMaxTime: `${appConfig.endHour}:00:00`,
+                // eventsプロパティに関数を指定し、動的に予定を読み込む
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    google.script.run
+                        .withSuccessHandler(function(slots) {
+                            busySlots = slots.map(slot => ({
+                                start: new Date(slot.start),
+                                end: new Date(slot.end)
+                            }));
+                            successCallback(busySlots); // FullCalendarにイベントを渡す
+                        })
+                        .getBusySlots();
+                },
+                eventDisplay: 'background',
+                eventColor: '#e9ecef',
+                // 日付クリックで時間選択モーダルを表示
+                dateClick: function(info) {
+                    // どのビューでも日付がクリックされたら空き時間計算を実行
+                    if (info.view.type.includes('dayGrid')) {
+                        calculateAndShowAvailableTimes(info.date);
+                    } else {
+                        // timeGridDayビューでは、クリックした時間で予約モーダルを直接表示することも可能
+                        // ここではシンプルに日付単位の動作に統一
+                        calculateAndShowAvailableTimes(info.date);
+                    }
+                }
+            });
+            calendar.render();
+        }
+         function calculateAndShowAvailableTimes(selectedDate) {
+            // コースの施術時間を取得
+            const courseSelect = document.getElementById('courseSelect');
+            if (!courseSelect) {
+                console.error('Course select element not found');
+                return;
+            }
+            
+            let duration = parseInt(courseSelect.value, 10);
+            // オフが選択されている場合は30分追加
+            const nailOffCheck = document.getElementById('nailOffCheck');
+            if (nailOffCheck && nailOffCheck.checked) {
+                duration += 30;
+            }
+            // 長さ出しが選択されている場合は、本数に応じて時間を追加
+            const lengthExtensionCheck = document.getElementById('lengthExtensionCheck');
+            if (lengthExtensionCheck && lengthExtensionCheck.checked) {
+                const lengthExtensionCount = document.getElementById('lengthExtensionCount');
+                if (lengthExtensionCount) {
+                    const count = parseInt(lengthExtensionCount.value, 10);
+                    if (count >= 1 && count <= 3) {
+                        duration += count * 5;
+                    } else if (count >= 4 && count <= 10) {
+                        duration += 30;
+                    }
+                }
+            }
+             const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+            if (!timeSlotsContainer) {
+                console.error('Time slots container not found');
+                return;
+            }
+            
+            timeSlotsContainer.innerHTML = ''; // コンテナをクリア
+            
+            const availableTimes = [];
+            const interval = 15; // 15分間隔
+             const dayStart = new Date(selectedDate);
+            dayStart.setHours(appConfig.startHour || 10, 0, 0, 0);
+             const dayEnd = new Date(selectedDate);
+            dayEnd.setHours(appConfig.endHour || 19, 0, 0, 0);
+             for (let time = dayStart.getTime(); time < dayEnd.getTime(); time += interval * 60 * 1000) {
+                const potentialStart = new Date(time);
+                const potentialEnd = new Date(potentialStart.getTime() + duration * 60 * 1000);
+                 if (potentialEnd > dayEnd) continue;
+                 const isOverlapping = busySlots.some(slot => 
+                    (potentialStart < slot.end && potentialEnd > slot.start)
+                );
+                 if (!isOverlapping) {
+                    availableTimes.push(potentialStart);
+                }
+            }
+             if (availableTimes.length === 0) {
+                timeSlotsContainer.innerHTML = '<p class="no-slots">この日は空き時間がありません。</p>';
+            } else {
+                availableTimes.forEach(time => {
+                    const button = document.createElement('button');
+                    button.textContent = time.toLocaleTimeString('ja-JP', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                    });
+                    button.className = 'time-slot-btn';
+                    button.addEventListener('click', () => {
+                        selectedStartTime = time;
+                        hideTimeSlotsModal();
+                        showReservationModal();
+                    });
+                    timeSlotsContainer.appendChild(button);
+                });
+            }
+             // 時間選択モーダルを表示
+            const timeSlotsModal = document.getElementById('timeSlotsModal');
+            const timeSlotsTitle = document.getElementById('timeSlotsTitle');
+            if (timeSlotsModal && timeSlotsTitle) {
+                timeSlotsTitle.textContent = selectedDate.toLocaleDateString('ja-JP', { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit',
+                    weekday: 'long'
+                });
+                timeSlotsModal.style.display = 'flex';
+            }
+        }
+         function showReservationModal() {
+            const reservationModal = document.getElementById('reservationModal');
+            if (!reservationModal) {
+                console.error('Reservation modal not found');
+                return;
+            }
+            
+            const selectedTimeElement = document.getElementById('selectedTime');
+            if (selectedTimeElement && selectedStartTime) {
+                selectedTimeElement.value = selectedStartTime.toLocaleString('ja-JP', { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit',
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false 
+                });
+            }
+             const courseSelect = document.getElementById('courseSelect');
+            const selectedOption = courseSelect ? courseSelect.options[courseSelect.selectedIndex] : null;
+            if (!selectedOption) {
+                console.error('No course selected');
+                return;
+            }
+            
+            const isNailOff = document.getElementById('nailOffCheck') ? document.getElementById('nailOffCheck').checked : false;
+            const isLengthExtension = document.getElementById('lengthExtensionCheck') ? document.getElementById('lengthExtensionCheck').checked : false;
+             let totalDuration = parseInt(selectedOption.value, 10);
+            if (isNailOff) totalDuration += 30;
+             let lengthExtensionCount = 0;
+            let lengthExtensionPrice = 0;
+            if (isLengthExtension) {
+                const lengthExtensionCountElement = document.getElementById('lengthExtensionCount');
+                if (lengthExtensionCountElement) {
+                    lengthExtensionCount = parseInt(lengthExtensionCountElement.value, 10);
+                    if (lengthExtensionCount >= 4) lengthExtensionPrice = 3500;
+                    if (lengthExtensionCount >= 1 && lengthExtensionCount <= 3) totalDuration += lengthExtensionCount * 5;
+                    else if (lengthExtensionCount >= 4) totalDuration += 30;
+                }
+            }
+             const basePrice = parseInt(selectedOption.dataset.price, 10);
+            
+            // 担当者指名の追加料金を計算
+            const isStaffAssignment = document.querySelector('input[name="staff_assignment"]:checked') ? 
+                document.querySelector('input[name="staff_assignment"]:checked').value === '指名あり' : false;
+            const staffAssignmentPrice = isStaffAssignment ? 400 : 0;
+            
+            const totalPrice = basePrice + lengthExtensionPrice + staffAssignmentPrice;
+             let summaryHtml = `<strong>コース:</strong> ${selectedOption.dataset.name}<br>`;
+            summaryHtml += `<strong>基本価格:</strong> ${basePrice.toLocaleString()}円<br>`;
+            
+            let optionsHtml = '';
+            if (isNailOff) optionsHtml += 'ジェルオフ<br>';
+            if (lengthExtensionCount > 0) {
+                optionsHtml += `長さ出し ${lengthExtensionCount}本`;
+                if (lengthExtensionPrice > 0) optionsHtml += ` (+${lengthExtensionPrice.toLocaleString()}円)`;
+                optionsHtml += '<br>';
+            }
+            if (isStaffAssignment) {
+                optionsHtml += '担当者指名';
+                if (staffAssignmentPrice > 0) optionsHtml += ` (+${staffAssignmentPrice.toLocaleString()}円)`;
+                optionsHtml += '<br>';
+            }
+            if (optionsHtml) summaryHtml += `<strong>オプション:</strong><br><div style="padding-left:1em;">${optionsHtml}</div>`;
+            summaryHtml += `<strong>合計時間:</strong> ${totalDuration}分<br>`;
+            summaryHtml += `<strong>合計金額:</strong> ${totalPrice.toLocaleString()}円`;
+            
+            const reservationSummary = document.getElementById('reservationSummary');
+            if (reservationSummary) {
+                reservationSummary.innerHTML = summaryHtml;
+            }
+             reservationModal.style.display = 'flex';
+        }
+        
+        function hideReservationModal() { 
+            const reservationModal = document.getElementById('reservationModal');
+            if (reservationModal) {
+                reservationModal.style.display = 'none';
+            }
+        }
+         function hideTimeSlotsModal() {
+            const timeSlotsModal = document.getElementById('timeSlotsModal');
+            if (timeSlotsModal) {
+                timeSlotsModal.style.display = 'none';
+            }
+        }
+        
+        // イベントリスナーの設定
+        document.addEventListener('DOMContentLoaded', function() {
+            // 担当者指名のラジオボタンイベントリスナー
+            const staffAssignmentRadios = document.querySelectorAll('input[name="staff_assignment"]');
+            const staffSelectionContainer = document.getElementById('staffSelectionContainer');
+            
+            staffAssignmentRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === '指名あり') {
+                        staffSelectionContainer.style.display = 'block';
+                    } else {
+                        staffSelectionContainer.style.display = 'none';
+                        // 指名なしに戻した場合は選択をリセット
+                        const staffSelect = document.getElementById('staffSelect');
+                        if (staffSelect) staffSelect.value = '';
+                    }
+                });
+            });
+             const cancelButton = document.getElementById('cancelButton');
+            if (cancelButton) {
+                cancelButton.addEventListener('click', hideReservationModal);
+            }
+             const timeSlotsCancelButton = document.getElementById('timeSlotsCancelButton');
+            if (timeSlotsCancelButton) {
+                timeSlotsCancelButton.addEventListener('click', hideTimeSlotsModal);
+            }
+             const submitButton = document.getElementById('submitButton');
+            if (submitButton) {
+                submitButton.addEventListener('click', function() {
+                    const courseSelect = document.getElementById('courseSelect');
+                    const selectedOption = courseSelect ? courseSelect.options[courseSelect.selectedIndex] : null;
+                    if (!selectedOption) {
+                        alert('コースを選択してください。');
+                        return;
+                    }
+                    
+                    const isNailOff = document.getElementById('nailOffCheck') ? document.getElementById('nailOffCheck').checked : false;
+                    const isLengthExtension = document.getElementById('lengthExtensionCheck') ? document.getElementById('lengthExtensionCheck').checked : false;
+                     let finalDuration = parseInt(selectedOption.value, 10);
+                    if (isNailOff) finalDuration += 30;
+                     let lengthExtensionCount = 0;
+                    let lengthExtensionPrice = 0;
+                    if (isLengthExtension) {
+                        const lengthExtensionCountElement = document.getElementById('lengthExtensionCount');
+                        if (lengthExtensionCountElement) {
+                            lengthExtensionCount = parseInt(lengthExtensionCountElement.value, 10);
+                            if (lengthExtensionCount >= 4) lengthExtensionPrice = 3500;
+                            if (lengthExtensionCount >= 1 && lengthExtensionCount <= 3) finalDuration += lengthExtensionCount * 5;
+                            else if (lengthExtensionCount >= 4) finalDuration += 30;
+                        }
+                    }
+                     // 担当者指名の情報を取得
+                    const isStaffAssignment = document.querySelector('input[name="staff_assignment"]:checked') ? 
+                        document.querySelector('input[name="staff_assignment"]:checked').value === '指名あり' : false;
+                    const selectedStaff = document.getElementById('staffSelect') ? document.getElementById('staffSelect').value : '';
+                    const staffAssignmentPrice = isStaffAssignment ? 400 : 0;
+                     const reservationData = {
+                        startTime: selectedStartTime ? selectedStartTime.toISOString() : null,
+                        courseDuration: finalDuration,
+                        courseNameOnly: selectedOption.dataset.name,
+                        coursePrice: selectedOption.dataset.price,
+                        isNailOff: isNailOff,
+                        lengthExtensionCount: lengthExtensionCount,
+                        lengthExtensionPrice: lengthExtensionPrice,
+                        isStaffAssignment: isStaffAssignment,
+                        selectedStaff: selectedStaff,
+                        staffAssignmentPrice: staffAssignmentPrice,
+                        name: document.getElementById('name') ? document.getElementById('name').value : '',
+                        email: document.getElementById('email') ? document.getElementById('email').value : '',
+                        phone: document.getElementById('phone') ? document.getElementById('phone').value : '',
+                        menuType: document.querySelector('input[name="menu_type"]:checked') ? document.querySelector('input[name="menu_type"]:checked').value : 'HAND',
+                        visitStatus: document.querySelector('input[name="visit"]:checked') ? document.querySelector('input[name="visit"]:checked').value : '初回',
+                    };
+                     if (!reservationData.name || !reservationData.email || !reservationData.phone) {
+                        alert('すべての必須項目を入力してください。');
+                        return;
+                    }
+                     const designImageInput = document.getElementById('designImage');
+                    const file = designImageInput ? designImageInput.files[0] : null;
+                     if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const fileData = {
+                                base64: e.target.result.split(',')[1], // "data:image/jpeg;base64," の部分を除去
+                                mimeType: file.type,
+                                fileName: file.name
+                            };
+                            reservationData.imageFile = fileData;
+                            sendReservationDataToServer(reservationData);
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        reservationData.imageFile = null; // 画像がない場合はnullをセット
+                        sendReservationDataToServer(reservationData);
+                    }
+                });
+            }
+        });
+         function sendReservationDataToServer(reservationData) {
+            submitButton.disabled = true;
+            submitButton.textContent = '処理中...';
+             google.script.run
+                .withSuccessHandler(function(result) {
+                    alert(result.message);
+                    if (result.success) {
+                        hideReservationModal();
+                        // フォームをリセット
+                        document.getElementById('name').value = '';
+                        document.getElementById('email').value = '';
+                        document.getElementById('phone').value = '';
+                        document.getElementById('designImage').value = ''; // 画像ファイル選択をリセット
+                        document.querySelector('input[name="visit"][value="初回"]').checked = true; // ラジオボタンを初期値に戻す
+                        document.querySelector('input[name="staff_assignment"][value="指名なし"]').checked = true; // 担当者指名をリセット
+                        document.getElementById('staffSelectionContainer').style.display = 'none'; // 担当者選択を非表示
+                        document.getElementById('staffSelect').value = ''; // 担当者選択をリセット
+                        // カレンダーのイベントを再読み込みして最新の状態にする
+                        calendar.refetchEvents(); 
+                    }
+                    submitButton.disabled = false;
+                    submitButton.textContent = '予約を確定する';
+                })
+                .withFailureHandler(function(error) {
+                    alert('エラーが発生しました: ' + error.message);
+                    submitButton.disabled = false;
+                    submitButton.textContent = '予約を確定する';
+                })
+                .createReservation(reservationData);
+        }
+    </script>
+</body>
+</html>
