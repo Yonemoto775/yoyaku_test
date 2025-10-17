@@ -11,80 +11,47 @@ const DAYS_TO_SHOW = 90;
 const SALON_NOTIFICATION_EMAIL = 'k.yonemoto@white-bloom.com';
 const NOTIFICATION_EMAILS = ['k.yonemoto@white-bloom.com'];
 
-// CORS対応のためのヘッダー設定
-function setCorsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Max-Age': '3600',
-    'Content-Type': 'application/json; charset=utf-8'
-  };
+// CORS対応のためのレスポンス作成
+function createCorsResponse(data) {
+  const output = ContentService.createTextOutput(JSON.stringify(data));
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
 }
 
-// OPTIONSリクエストの処理
+// OPTIONSリクエストの処理（CORSプリフライト）
 function doOptions() {
   return ContentService
     .createTextOutput('')
-    .setMimeType(ContentService.MimeType.TEXT)
-    .setHeaders(setCorsHeaders());
+    .setMimeType(ContentService.MimeType.TEXT);
 }
 
 // GETリクエストの処理（初期データ取得）
 function doGet(e) {
   try {
-    // CORSプリフライトリクエストの処理
-    if (e.parameter && e.parameter.action === 'options') {
-      return doOptions();
-    }
-    
     const action = e.parameter ? e.parameter.action : null;
     
     if (action === 'getInitialData') {
       const result = getInitialData();
-      return ContentService
-        .createTextOutput(JSON.stringify(result))
-        .setMimeType(ContentService.MimeType.JSON)
-        .setHeaders(setCorsHeaders());
+      return createCorsResponse(result);
     } else if (action === 'getBusySlots') {
       const result = getBusySlots();
-      return ContentService
-        .createTextOutput(JSON.stringify(result))
-        .setMimeType(ContentService.MimeType.JSON)
-        .setHeaders(setCorsHeaders());
+      return createCorsResponse(result);
     } else {
-      return ContentService
-        .createTextOutput(JSON.stringify({ error: 'Invalid action' }))
-        .setMimeType(ContentService.MimeType.JSON)
-        .setHeaders(setCorsHeaders());
+      return createCorsResponse({ error: 'Invalid action' });
     }
   } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(setCorsHeaders());
+    return createCorsResponse({ error: error.toString() });
   }
 }
 
 // POSTリクエストの処理（予約作成）
 function doPost(e) {
   try {
-    // CORSプリフライトリクエストの処理
-    if (e.postData && e.postData.contents === '') {
-      return doOptions();
-    }
-    
     const data = JSON.parse(e.postData.contents);
     const result = createReservation(data);
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(setCorsHeaders());
+    return createCorsResponse(result);
   } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(setCorsHeaders());
+    return createCorsResponse({ error: error.toString() });
   }
 }
 
