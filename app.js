@@ -12,29 +12,119 @@ function initializeApp() {
     // Google Apps Script APIの利用可能性をチェック
     if (typeof google === 'undefined' || !google.script || !google.script.run) {
         if (typeof console !== 'undefined' && console.warn) {
-            console.warn('Google Apps Script API not available');
+            console.warn('Google Apps Script API not available, using fallback data');
         }
+        // Google Apps Scriptが利用できない場合のフォールバック
+        initializeWithFallbackData(calendarEl);
         return;
     }
     
     // 最初にアプリの初期データ（設定＋メニュー）を取得
-    google.script.run.withSuccessHandler(function(initialData) {
-        // 1. アプリ設定をグローバル変数に保存
-        appConfig = initialData.config;
-        
-        // 2. コース選択のプルダウンを生成
-        populateCourseSelect(initialData.menuItems);
+    try {
+        google.script.run.withSuccessHandler(function(initialData) {
+            // 1. アプリ設定をグローバル変数に保存
+            appConfig = initialData.config;
+            
+            // 2. コース選択のプルダウンを生成
+            populateCourseSelect(initialData.menuItems);
 
-        // 3. カレンダーを初期化
-        initializeCalendar(calendarEl);
-    }).withFailureHandler(function(error) {
-        // サーバーからデータを取得できなかった場合のエラー表示
-        var errorMessage = 'アプリケーションの読み込みに失敗しました';
-        if (error && error.message) {
-            errorMessage += ': ' + error.message;
+            // 3. カレンダーを初期化
+            initializeCalendar(calendarEl);
+            
+    // 接続成功を表示
+    showConnectionStatus('Google Apps Scriptに正常に接続しました。', 'success');
+    
+    // ヘルプ情報を非表示にする
+    var helpInfo = document.getElementById('helpInfo');
+    if (helpInfo) {
+        helpInfo.style.display = 'none';
+    }
+        }).withFailureHandler(function(error) {
+            // サーバーからデータを取得できなかった場合のエラー表示
+            var errorMessage = 'アプリケーションの読み込みに失敗しました';
+            if (error && error.message) {
+                errorMessage += ': ' + error.message;
+            }
+        showConnectionStatus(errorMessage, 'error');
+        // ヘルプ情報を表示する
+        var helpInfo = document.getElementById('helpInfo');
+        if (helpInfo) {
+            helpInfo.style.display = 'block';
         }
-        alert(errorMessage);
-    }).getInitialData();
+        // エラー時もフォールバックデータで初期化
+        initializeWithFallbackData(calendarEl);
+        }).getInitialData();
+    } catch (e) {
+        if (typeof console !== 'undefined' && console.error) {
+            console.error('Google Apps Script API call failed:', e);
+        }
+        showConnectionStatus('Google Apps Script APIの呼び出しに失敗しました。', 'error');
+        // ヘルプ情報を表示する
+        var helpInfo = document.getElementById('helpInfo');
+        if (helpInfo) {
+            helpInfo.style.display = 'block';
+        }
+        // 例外発生時もフォールバックデータで初期化
+        initializeWithFallbackData(calendarEl);
+    }
+}
+
+// フォールバック用の初期化関数
+function initializeWithFallbackData(calendarEl) {
+    // デフォルト設定
+    appConfig = {
+        startHour: 10,
+        endHour: 19,
+        daysToShow: 90
+    };
+    
+    // デフォルトメニュー
+    var defaultMenuItems = [
+        { name: 'ハンドケア', duration: 60, price: 5000 },
+        { name: 'ジェルネイル', duration: 90, price: 8000 },
+        { name: 'スカルプチュア', duration: 120, price: 12000 }
+    ];
+    
+    // 接続状況を表示
+    showConnectionStatus('Google Apps Scriptに接続できません。デフォルトメニューで動作します。', 'warning');
+    
+    // ヘルプ情報を表示する
+    var helpInfo = document.getElementById('helpInfo');
+    if (helpInfo) {
+        helpInfo.style.display = 'block';
+    }
+    
+    // コース選択のプルダウンを生成
+    populateCourseSelect(defaultMenuItems);
+    
+    // カレンダーを初期化（予約データは空で）
+    initializeCalendar(calendarEl);
+}
+
+// 接続状況表示関数
+function showConnectionStatus(message, type) {
+    var statusDiv = document.getElementById('connectionStatus');
+    var statusText = document.getElementById('statusText');
+    
+    if (statusDiv && statusText) {
+        statusDiv.style.display = 'block';
+        statusText.textContent = message;
+        
+        // タイプに応じてスタイルを変更
+        if (type === 'success') {
+            statusDiv.style.backgroundColor = '#d4edda';
+            statusDiv.style.borderColor = '#c3e6cb';
+            statusDiv.style.color = '#155724';
+        } else if (type === 'warning') {
+            statusDiv.style.backgroundColor = '#fff3cd';
+            statusDiv.style.borderColor = '#ffeaa7';
+            statusDiv.style.color = '#856404';
+        } else if (type === 'error') {
+            statusDiv.style.backgroundColor = '#f8d7da';
+            statusDiv.style.borderColor = '#f5c6cb';
+            statusDiv.style.color = '#721c24';
+        }
+    }
 }
 
 /**
@@ -133,15 +223,43 @@ function initializeCalendar(calendarEl) {
         slotMinTime: `${appConfig.startHour}:00:00`,
         slotMaxTime: `${appConfig.endHour}:00:00`,
         events: function(fetchInfo, successCallback, failureCallback) {
-            google.script.run
-                .withSuccessHandler(function(slots) {
-                    busySlots = slots.map(slot => ({
-                        start: new Date(slot.start),
-                        end: new Date(slot.end)
-                    }));
-                    successCallback(busySlots);
-                })
-                .getBusySlots();
+            // Google Apps Script APIが利用可能かチェック
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                try {
+                    google.script.run
+                        .withSuccessHandler(function(slots) {
+                            if (slots && Array.isArray(slots)) {
+                                busySlots = slots.map(function(slot) {
+                                    return {
+                                        start: new Date(slot.start),
+                                        end: new Date(slot.end)
+                                    };
+                                });
+                            } else {
+                                busySlots = [];
+                            }
+                            successCallback(busySlots);
+                        })
+                        .withFailureHandler(function(error) {
+                            if (typeof console !== 'undefined' && console.error) {
+                                console.error('Failed to fetch busy slots:', error);
+                            }
+                            busySlots = [];
+                            successCallback([]);
+                        })
+                        .getBusySlots();
+                } catch (e) {
+                    if (typeof console !== 'undefined' && console.error) {
+                        console.error('Google Apps Script API call failed:', e);
+                    }
+                    busySlots = [];
+                    successCallback([]);
+                }
+            } else {
+                // Google Apps Script APIが利用できない場合は空の配列を返す
+                busySlots = [];
+                successCallback([]);
+            }
         },
         eventDisplay: 'background',
         eventColor: '#e9ecef',
@@ -372,58 +490,78 @@ function sendReservationDataToServer(reservationData) {
     submitButton.disabled = true;
     submitButton.textContent = '処理中...';
 
-    google.script.run
-        .withSuccessHandler(function(result) {
-            alert(result.message);
-            if (result.success) {
-                hideReservationModal();
-                // フォームをリセット
-                var nameField = document.getElementById('name');
-                var emailField = document.getElementById('email');
-                var phoneField = document.getElementById('phone');
-                var designImageField = document.getElementById('designImage');
-                var visitRadios = document.querySelectorAll('input[name="visit"]');
-                var staffAssignmentRadios = document.querySelectorAll('input[name="staff_assignment"]');
-                var staffSelectionContainer = document.getElementById('staffSelectionContainer');
-                var staffSelect = document.getElementById('staffSelect');
-                
-                if (nameField) nameField.value = '';
-                if (emailField) emailField.value = '';
-                if (phoneField) phoneField.value = '';
-                if (designImageField) designImageField.value = '';
-                
-                for (var i = 0; i < visitRadios.length; i++) {
-                    if (visitRadios[i].value === '初回') {
-                        visitRadios[i].checked = true;
+    // Google Apps Script APIが利用可能かチェック
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        try {
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    alert(result.message);
+                    if (result.success) {
+                        hideReservationModal();
+                        resetForm();
+                        if (calendar && calendar.refetchEvents) {
+                            calendar.refetchEvents();
+                        }
                     }
-                }
-                
-                for (var i = 0; i < staffAssignmentRadios.length; i++) {
-                    if (staffAssignmentRadios[i].value === '指名なし') {
-                        staffAssignmentRadios[i].checked = true;
+                    submitButton.disabled = false;
+                    submitButton.textContent = '予約を確定する';
+                })
+                .withFailureHandler(function(error) {
+                    var errorMessage = 'エラーが発生しました';
+                    if (error && error.message) {
+                        errorMessage += ': ' + error.message;
                     }
-                }
-                
-                if (staffSelectionContainer) staffSelectionContainer.style.display = 'none';
-                if (staffSelect) staffSelect.value = '';
-                
-                if (calendar && calendar.refetchEvents) {
-                    calendar.refetchEvents();
-                }
+                    alert(errorMessage);
+                    submitButton.disabled = false;
+                    submitButton.textContent = '予約を確定する';
+                })
+                .createReservation(reservationData);
+        } catch (e) {
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Google Apps Script API call failed:', e);
             }
+            alert('予約システムに接続できません。しばらく時間をおいてから再度お試しください。');
             submitButton.disabled = false;
             submitButton.textContent = '予約を確定する';
-        })
-        .withFailureHandler(function(error) {
-            var errorMessage = 'エラーが発生しました';
-            if (error && error.message) {
-                errorMessage += ': ' + error.message;
-            }
-            alert(errorMessage);
-            submitButton.disabled = false;
-            submitButton.textContent = '予約を確定する';
-        })
-        .createReservation(reservationData);
+        }
+    } else {
+        // Google Apps Script APIが利用できない場合
+        alert('予約システムに接続できません。Google Apps Scriptの設定を確認してください。');
+        submitButton.disabled = false;
+        submitButton.textContent = '予約を確定する';
+    }
+}
+
+// フォームリセット関数
+function resetForm() {
+    var nameField = document.getElementById('name');
+    var emailField = document.getElementById('email');
+    var phoneField = document.getElementById('phone');
+    var designImageField = document.getElementById('designImage');
+    var visitRadios = document.querySelectorAll('input[name="visit"]');
+    var staffAssignmentRadios = document.querySelectorAll('input[name="staff_assignment"]');
+    var staffSelectionContainer = document.getElementById('staffSelectionContainer');
+    var staffSelect = document.getElementById('staffSelect');
+    
+    if (nameField) nameField.value = '';
+    if (emailField) emailField.value = '';
+    if (phoneField) phoneField.value = '';
+    if (designImageField) designImageField.value = '';
+    
+    for (var i = 0; i < visitRadios.length; i++) {
+        if (visitRadios[i].value === '初回') {
+            visitRadios[i].checked = true;
+        }
+    }
+    
+    for (var i = 0; i < staffAssignmentRadios.length; i++) {
+        if (staffAssignmentRadios[i].value === '指名なし') {
+            staffAssignmentRadios[i].checked = true;
+        }
+    }
+    
+    if (staffSelectionContainer) staffSelectionContainer.style.display = 'none';
+    if (staffSelect) staffSelect.value = '';
 }
 
 // イベントリスナーの設定
