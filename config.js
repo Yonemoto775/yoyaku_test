@@ -4,7 +4,7 @@
 
 var CONFIG = {
     // Google Apps Script Web APIのURL
-    GAS_API_URL: '', // ここにGoogle Apps Script Web APIのURLを入力してください
+    GAS_API_URL: 'https://script.google.com/macros/s/AKfycbzrw_oTZ3disPUWp35ALnhWoy_aL383zSW_HIbseTBFGYYxRQEw7wXCpuvbI0_po0BS/exec', // ここにGoogle Apps Script Web APIのURLを入力してください
     
     // デフォルト設定（Google Apps Scriptに接続できない場合に使用）
     DEFAULT_CONFIG: {
