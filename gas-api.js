@@ -16,8 +16,9 @@ function setCorsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '3600',
+    'Content-Type': 'application/json; charset=utf-8'
   };
 }
 
@@ -32,7 +33,12 @@ function doOptions() {
 // GETリクエストの処理（初期データ取得）
 function doGet(e) {
   try {
-    const action = e.parameter.action;
+    // CORSプリフライトリクエストの処理
+    if (e.parameter && e.parameter.action === 'options') {
+      return doOptions();
+    }
+    
+    const action = e.parameter ? e.parameter.action : null;
     
     if (action === 'getInitialData') {
       const result = getInitialData();
@@ -63,6 +69,11 @@ function doGet(e) {
 // POSTリクエストの処理（予約作成）
 function doPost(e) {
   try {
+    // CORSプリフライトリクエストの処理
+    if (e.postData && e.postData.contents === '') {
+      return doOptions();
+    }
+    
     const data = JSON.parse(e.postData.contents);
     const result = createReservation(data);
     return ContentService
