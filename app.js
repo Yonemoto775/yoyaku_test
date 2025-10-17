@@ -4,48 +4,14 @@ let selectedStartTime;
 let busySlots = []; 
 let appConfig = {};
 
-// ブラウザ警告を表示する関数
-function showBrowserWarning() {
-    const warningDiv = document.createElement('div');
-    warningDiv.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        text-align: center;
-        padding: 20px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    `;
-    warningDiv.innerHTML = `
-        <h2 style="margin-bottom: 20px;">⚠️ ブラウザの互換性について</h2>
-        <p style="margin-bottom: 15px; line-height: 1.6;">
-            現在のブラウザでは正常に動作しません。<br>
-            SafariやChrome等の標準ブラウザでお試しください。
-        </p>
-        <button onclick="location.reload()" 
-                style="padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer;">
-            ページを再読み込み
-        </button>
-    `;
-    document.body.appendChild(warningDiv);
-}
 
 // パフォーマンス最適化のための遅延読み込み
 function initializeApp() {
     const calendarEl = document.getElementById('calendar');
     
-    // Instagram内のWebブラウザでのGoogle Apps Script APIの利用可能性をチェック
+    // Google Apps Script APIの利用可能性をチェック
     if (typeof google === 'undefined' || !google.script || !google.script.run) {
-        console.warn('Google Apps Script API not available - Instagram browser detected');
-        showBrowserWarning();
+        console.warn('Google Apps Script API not available');
         return;
     }
     
