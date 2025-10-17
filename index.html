@@ -74,9 +74,19 @@
             <div style="margin-top:10px; font-size:0.8em; color:#666;">
                 ヘッダー行: A列「コース名」、B列「施術時間（分）」、C列「価格（円）」
             </div>
+            <div style="margin-top:10px; font-size:0.8em; color:#d63384;">
+                <strong>接続エラーの場合:</strong><br>
+                • Google Apps ScriptのURLが正しいか確認<br>
+                • Webアプリとして公開されているか確認<br>
+                • アクセス権限が「全員」に設定されているか確認<br>
+                • ブラウザのコンソールでエラー詳細を確認
+            </div>
             <div style="margin-top:10px;">
-                <button type="button" onclick="testConnection()" style="padding:5px 10px; background-color:#007bff; color:white; border:none; border-radius:3px; cursor:pointer;">
+                <button type="button" onclick="testConnection()" style="padding:5px 10px; background-color:#007bff; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:10px;">
                     接続テスト
+                </button>
+                <button type="button" onclick="testDirectAccess()" style="padding:5px 10px; background-color:#28a745; color:white; border:none; border-radius:3px; cursor:pointer;">
+                    直接アクセステスト
                 </button>
             </div>
         </div>

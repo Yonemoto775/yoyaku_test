@@ -610,6 +610,17 @@ function fetchCreateReservation(reservationData, submitButton) {
     });
 }
 
+// 直接アクセステスト関数
+function testDirectAccess() {
+    if (!GAS_API_URL || GAS_API_URL === '' || GAS_API_URL === 'undefined') {
+        alert('Google Apps Script Web APIのURLが設定されていません。');
+        return;
+    }
+    
+    // 新しいタブで直接アクセス
+    window.open(GAS_API_URL + '?action=getInitialData', '_blank');
+}
+
 // 接続テスト関数
 function testConnection() {
     if (typeof console !== 'undefined' && console.log) {
@@ -635,11 +646,20 @@ function testConnection() {
         return;
     }
     
-    fetch(testUrl)
+    fetch(testUrl, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
         .then(function(response) {
             if (typeof console !== 'undefined' && console.log) {
                 console.log('Test response status:', response.status);
+                console.log('Test response statusText:', response.statusText);
                 console.log('Test response headers:', response.headers);
+                console.log('Test response type:', response.type);
             }
             
             if (!response.ok) {
@@ -665,8 +685,17 @@ function testConnection() {
         .catch(function(error) {
             if (typeof console !== 'undefined' && console.error) {
                 console.error('Connection test failed:', error);
+                console.error('Error name:', error.name);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
             }
-            showConnectionStatus('接続テスト失敗', 'error', error.message);
+            
+            var errorMessage = error.message;
+            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                errorMessage = 'ネットワークエラーまたはCORSエラーです。Google Apps Scriptの設定を確認してください。';
+            }
+            
+            showConnectionStatus('接続テスト失敗', 'error', errorMessage);
         });
 }
 
