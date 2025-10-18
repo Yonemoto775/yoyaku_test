@@ -91,10 +91,10 @@ function fetchInitialData(calendarEl) {
             // 接続成功を表示
             showConnectionStatus('Google Apps Script Web APIに正常に接続しました。', 'success');
             
-            // ヘルプ情報を非表示にする
+            // ヘルプ情報は表示したままにする（デバッグ用）
             var helpInfo = document.getElementById('helpInfo');
             if (helpInfo) {
-                helpInfo.style.display = 'none';
+                helpInfo.style.display = 'block';
             }
         })
         .catch(function(error) {
