@@ -767,7 +767,13 @@ function testConnection() {
     }
     
     if (!GAS_API_URL || GAS_API_URL === '' || GAS_API_URL === 'undefined') {
-        alert('Google Apps Script Web APIのURLが設定されていません。config.jsファイルを確認してください。\n現在の値: ' + GAS_API_URL);
+        alert('Google Apps Script Web APIのURLが設定されていません。\n\n設定方法:\n1. config.jsファイルのGAS_API_URLを確認\n2. Google Apps ScriptでWebアプリとして公開\n3. アクセス権限を「全員」に設定\n\n現在の値: ' + GAS_API_URL);
+        return;
+    }
+    
+    // URLの形式をチェック
+    if (!GAS_API_URL.includes('script.google.com')) {
+        alert('URLの形式が正しくありません。\n\n正しい形式: https://script.google.com/macros/s/.../exec\n現在の値: ' + GAS_API_URL);
         return;
     }
     
@@ -830,7 +836,7 @@ function testConnection() {
             
             var errorMessage = error.message;
             if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-                errorMessage = 'ネットワークエラーまたはCORSエラーです。Google Apps Scriptの設定を確認してください。';
+                errorMessage = 'ネットワークエラーまたはCORSエラーです。\n\n考えられる原因:\n1. Google Apps ScriptがWebアプリとして公開されていない\n2. アクセス権限が「全員」に設定されていない\n3. URLが間違っている\n4. ブラウザのセキュリティ設定\n\n直接アクセステストを試してください。';
             }
             
             showConnectionStatus('接続テスト失敗', 'error', errorMessage);

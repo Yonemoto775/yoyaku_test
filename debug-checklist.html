@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デバッグチェックリスト</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .checklist { background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 10px 0; }
+        .check-item { margin: 10px 0; padding: 10px; border-left: 4px solid #007bff; background-color: white; }
+        .check-item.error { border-left-color: #dc3545; background-color: #f8d7da; }
+        .check-item.success { border-left-color: #28a745; background-color: #d4edda; }
+        .check-item.warning { border-left-color: #ffc107; background-color: #fff3cd; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 3px; }
+        button:hover { background-color: #0056b3; }
+        .code { background-color: #f1f1f1; padding: 10px; border-radius: 3px; font-family: monospace; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔧 予約システム デバッグチェックリスト</h1>
+    
+    <div class="checklist">
+        <h2>1. 設定の確認</h2>
+        <div id="configCheck" class="check-item">確認中...</div>
+    </div>
+    
+    <div class="checklist">
+        <h2>2. 接続テスト</h2>
+        <button onclick="testConnection()">接続テスト実行</button>
+        <div id="connectionResult" class="check-item">未実行</div>
+    </div>
+    
+    <div class="checklist">
+        <h2>3. 直接アクセステスト</h2>
+        <button onclick="testDirectAccess()">直接アクセステスト実行</button>
+        <div id="directAccessResult" class="check-item">未実行</div>
+    </div>
+    
+    <div class="checklist">
+        <h2>4. 予約テスト</h2>
+        <button onclick="testReservation()">予約テスト実行</button>
+        <div id="reservationResult" class="check-item">未実行</div>
+    </div>
+    
+    <div class="checklist">
+        <h2>5. Google Apps Script設定チェックリスト</h2>
+        <div class="check-item">
+            <h3>✅ 確認すべき項目:</h3>
+            <ol>
+                <li><strong>Webアプリとして公開されているか</strong>
+                    <div class="code">
+                        1. Google Apps Scriptエディタを開く<br>
+                        2. 「デプロイ」→「新しいデプロイ」<br>
+                        3. 種類: 「Webアプリ」を選択<br>
+                        4. 説明: 適当な説明を入力<br>
+                        5. 「デプロイ」をクリック
+                    </div>
+                </li>
+                <li><strong>アクセス権限が「全員」に設定されているか</strong>
+                    <div class="code">
+                        1. デプロイ作成時に「アクセス権限」を「全員（匿名ユーザーを含む）」に設定<br>
+                        2. 既存のデプロイの場合は「編集」→「アクセス権限」を変更
+                    </div>
+                </li>
+                <li><strong>URLが正しいか</strong>
+                    <div class="code">
+                        正しい形式: https://script.google.com/macros/s/[SCRIPT_ID]/exec<br>
+                        間違った形式: https://script.google.com/macros/s/[SCRIPT_ID]/dev
+                    </div>
+                </li>
+                <li><strong>コードが正しく保存されているか</strong>
+                    <div class="code">
+                        1. コードを保存（Ctrl+S）<br>
+                        2. エラーがないか確認<br>
+                        3. 新しいデプロイを作成
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        function checkConfig() {
+            var configCheck = document.getElementById('configCheck');
+            var issues = [];
+            
+            // GAS_API_URLの確認
+            if (typeof GAS_API_URL === 'undefined') {
+                issues.push('GAS_API_URLが定義されていません');
+            } else if (!GAS_API_URL) {
+                issues.push('GAS_API_URLが空です');
+            } else if (!GAS_API_URL.includes('script.google.com')) {
+                issues.push('GAS_API_URLの形式が正しくありません');
+            } else if (!GAS_API_URL.includes('/exec')) {
+                issues.push('GAS_API_URLが/execで終わっていません（/devになっていませんか？）');
+            }
+            
+            // fetch APIの確認
+            if (typeof fetch === 'undefined') {
+                issues.push('fetch APIが利用できません（ブラウザが古すぎます）');
+            }
+            
+            if (issues.length === 0) {
+                configCheck.className = 'check-item success';
+                configCheck.innerHTML = '✅ 設定は正常です<br>GAS_API_URL: ' + GAS_API_URL;
+            } else {
+                configCheck.className = 'check-item error';
+                configCheck.innerHTML = '❌ 設定に問題があります:<br>' + issues.join('<br>');
+            }
+        }
+        
+        function testConnection() {
+            var result = document.getElementById('connectionResult');
+            result.className = 'check-item';
+            result.innerHTML = '接続テスト中...';
+            
+            if (typeof GAS_API_URL === 'undefined' || !GAS_API_URL) {
+                result.className = 'check-item error';
+                result.innerHTML = '❌ GAS_API_URLが設定されていません';
+                return;
+            }
+            
+            var testUrl = GAS_API_URL + '?action=getInitialData';
+            console.log('Testing connection to:', testUrl);
+            
+            fetch(testUrl, { method: 'GET', mode: 'cors' })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (response.ok) {
+                    result.className = 'check-item success';
+                    result.innerHTML = '✅ 接続成功 (Status: ' + response.status + ')';
+                } else {
+                    result.className = 'check-item error';
+                    result.innerHTML = '❌ 接続失敗 (Status: ' + response.status + ')<br>考えられる原因:<br>1. Webアプリとして公開されていない<br>2. アクセス権限が「全員」に設定されていない<br>3. URLが間違っている';
+                }
+            })
+            .catch(error => {
+                console.error('Connection error:', error);
+                result.className = 'check-item error';
+                result.innerHTML = '❌ 接続エラー: ' + error.message + '<br>考えられる原因:<br>1. CORSエラー<br>2. ネットワークエラー<br>3. Google Apps Scriptの設定問題';
+            });
+        }
+        
+        function testDirectAccess() {
+            var result = document.getElementById('directAccessResult');
+            result.className = 'check-item';
+            result.innerHTML = '直接アクセステスト中...';
+            
+            if (typeof GAS_API_URL === 'undefined' || !GAS_API_URL) {
+                result.className = 'check-item error';
+                result.innerHTML = '❌ GAS_API_URLが設定されていません';
+                return;
+            }
+            
+            var testUrl = GAS_API_URL + '?action=getInitialData';
+            console.log('Opening direct access URL:', testUrl);
+            
+            try {
+                var newWindow = window.open(testUrl, '_blank');
+                if (newWindow) {
+                    result.className = 'check-item success';
+                    result.innerHTML = '✅ 新しいタブで開きました<br>URL: ' + testUrl + '<br><br>新しいタブでJSONレスポンスが表示されれば正常です。';
+                } else {
+                    result.className = 'check-item error';
+                    result.innerHTML = '❌ ポップアップがブロックされました<br>ブラウザのポップアップブロックを無効にしてください。';
+                }
+            } catch (error) {
+                result.className = 'check-item error';
+                result.innerHTML = '❌ エラー: ' + error.message;
+            }
+        }
+        
+        function testReservation() {
+            var result = document.getElementById('reservationResult');
+            result.className = 'check-item';
+            result.innerHTML = '予約テスト中...';
+            
+            if (typeof GAS_API_URL === 'undefined' || !GAS_API_URL) {
+                result.className = 'check-item error';
+                result.innerHTML = '❌ GAS_API_URLが設定されていません';
+                return;
+            }
+            
+            var testData = {
+                name: 'テスト太郎',
+                phone: '090-1234-5678',
+                email: 'test@example.com',
+                startTime: new Date().toISOString(),
+                courseDuration: 90,
+                courseNameOnly: 'ジェルネイル',
+                coursePrice: 8000,
+                menuType: 'ジェルネイル',
+                visitStatus: '初回',
+                isNailOff: false,
+                lengthExtensionCount: 0,
+                lengthExtensionPrice: 0,
+                isStaffAssignment: false,
+                selectedStaff: '',
+                staffAssignmentPrice: 0,
+                imageFile: null
+            };
+            
+            console.log('Testing reservation with data:', testData);
+            
+            fetch(GAS_API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(testData)
+            })
+            .then(response => {
+                console.log('Reservation response status:', response.status);
+                return response.text();
+            })
+            .then(text => {
+                console.log('Reservation response text:', text);
+                try {
+                    var result = JSON.parse(text);
+                    if (result.success) {
+                        document.getElementById('reservationResult').className = 'check-item success';
+                        document.getElementById('reservationResult').innerHTML = '✅ 予約テスト成功<br>メッセージ: ' + result.message;
+                    } else {
+                        document.getElementById('reservationResult').className = 'check-item error';
+                        document.getElementById('reservationResult').innerHTML = '❌ 予約テスト失敗<br>メッセージ: ' + result.message;
+                    }
+                } catch (e) {
+                    document.getElementById('reservationResult').className = 'check-item error';
+                    document.getElementById('reservationResult').innerHTML = '❌ JSON解析エラー<br>レスポンス: ' + text.substring(0, 200);
+                }
+            })
+            .catch(error => {
+                console.error('Reservation test error:', error);
+                result.className = 'check-item error';
+                result.innerHTML = '❌ 予約テストエラー: ' + error.message;
+            });
+        }
+        
+        // ページ読み込み時に設定をチェック
+        window.onload = function() {
+            checkConfig();
+        };
+    </script>
+</body>
+</html>
