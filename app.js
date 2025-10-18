@@ -684,6 +684,51 @@ function testDirectAccess() {
 
 // 予約テスト関数
 function testReservation() {
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('testReservation called');
+        console.log('GAS_API_URL:', GAS_API_URL);
+    }
+    
+    if (!GAS_API_URL || GAS_API_URL === '' || GAS_API_URL === 'undefined') {
+        alert('Google Apps Script Web APIのURLが設定されていません。');
+        return;
+    }
+    
+    // テスト用の予約データ
+    var testReservationData = {
+        name: 'テスト太郎',
+        phone: '090-1234-5678',
+        email: 'test@example.com',
+        startTime: new Date().toISOString(),
+        courseDuration: 90,
+        courseNameOnly: 'ジェルネイル',
+        coursePrice: 8000,
+        menuType: 'ジェルネイル',
+        visitStatus: '初回',
+        isNailOff: false,
+        lengthExtensionCount: 0,
+        lengthExtensionPrice: 0,
+        isStaffAssignment: false,
+        selectedStaff: '',
+        staffAssignmentPrice: 0,
+        imageFile: null
+    };
+    
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('Test reservation data:', testReservationData);
+    }
+    
+    // テスト用のボタン要素を作成
+    var testButton = document.createElement('button');
+    testButton.textContent = 'テスト中...';
+    testButton.disabled = true;
+    
+    // fetchCreateReservation関数を使用してテスト
+    fetchCreateReservation(testReservationData, testButton);
+}
+
+// 予約テスト関数
+function testReservation() {
     if (!GAS_API_URL || GAS_API_URL === '' || GAS_API_URL === 'undefined') {
         alert('Google Apps Script Web APIのURLが設定されていません。');
         return;
