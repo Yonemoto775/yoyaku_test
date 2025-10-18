@@ -2,8 +2,14 @@
 <html lang="ja">
 <head>
     <base target="_top">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!--[if lt IE 9]>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <![endif]-->
     <meta name="description" content="ネイルサロンCARATの予約管理システム。オンラインで簡単にご予約いただけます。">
     <meta name="keywords" content="ネイルサロン,予約,オンライン予約,CARAT,大阪">
     <meta name="author" content="CARAT">
@@ -35,13 +41,58 @@
     <link rel="preload" href="styles.css" as="style">
     <link rel="preload" href="app.js" as="script">
     
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.5.9/es5-shim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.5.9/es5-sham.min.js"></script>
+    <![endif]-->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js' defer></script>
     <link rel="stylesheet" href="styles.css">
-    <script src="app.js" defer></script>
+    <script src="config.js"></script>
+    <script>
+        // 設定が読み込まれたかチェック
+        if (typeof console !== 'undefined' && console.log) {
+            console.log('Config check - GAS_API_URL:', typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : 'undefined');
+        }
+    </script>
+    <script src="app.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>予約管理システム</h1>
+        <div id="connectionStatus" style="display:none; background-color:#fff3cd; border:1px solid #ffeaa7; padding:10px; margin-bottom:20px; border-radius:4px;">
+            <strong>接続状況:</strong> <span id="statusText">確認中...</span>
+            <div id="debugInfo" style="margin-top:10px; font-size:0.9em; color:#666;">
+                <div>設定URL: <span id="configUrl">未設定</span></div>
+                <div>エラー詳細: <span id="errorDetails">なし</span></div>
+            </div>
+        </div>
+        <div id="helpInfo" style="display:block !important; background-color:#e7f3ff; border:1px solid #b3d9ff; padding:15px; margin-bottom:20px; border-radius:4px; font-size:0.9em;">
+            <strong>設定方法:</strong><br>
+            1. Google Apps ScriptでWebアプリとして公開してください<br>
+            2. アクセス権限を「全員（匿名ユーザーを含む）」に設定してください<br>
+            3. スプレッドシートに「メニュー」シートを作成し、コース情報を入力してください<br>
+            <div style="margin-top:10px; font-size:0.8em; color:#666;">
+                ヘッダー行: A列「コース名」、B列「施術時間（分）」、C列「価格（円）」
+            </div>
+            <div style="margin-top:10px; font-size:0.8em; color:#d63384;">
+                <strong>接続エラーの場合:</strong><br>
+                • Google Apps ScriptのURLが正しいか確認<br>
+                • Webアプリとして公開されているか確認<br>
+                • アクセス権限が「全員」に設定されているか確認<br>
+                • ブラウザのコンソールでエラー詳細を確認
+            </div>
+            <div style="margin-top:10px;">
+                <button type="button" onclick="testConnection()" style="padding:5px 10px; background-color:#007bff; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:10px;">
+                    接続テスト
+                </button>
+                <button type="button" onclick="if(typeof testDirectAccess === 'function') { testDirectAccess(); } else { alert('testDirectAccess関数が定義されていません。'); }" style="padding:5px 10px; background-color:#28a745; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:10px;" id="directTestBtn">
+                    直接アクセステスト
+                </button>
+                <button type="button" onclick="if(typeof testReservation === 'function') { testReservation(); } else { alert('testReservation関数が定義されていません。'); }" style="padding:5px 10px; background-color:#dc3545; color:white; border:none; border-radius:3px; cursor:pointer;" id="reservationTestBtn">
+                    予約テスト
+                </button>
+            </div>
+        </div>
         <div class="step-guide">
             <span class="step">Step 1:</span> コース・オフの有無を選択 → <span class="step">Step 2:</span> 日付を選択
             <p style="font-size:0.8em; margin-top:5px; color:#555;">※コース等を変更した場合は、再度日付をクリックしてください。</p>
