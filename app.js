@@ -1064,6 +1064,13 @@ function setupEventListeners() {
 
 // アプリ初期化
 function initApp() {
+    // ヘルプ情報を強制的に表示
+    var helpInfo = document.getElementById('helpInfo');
+    if (helpInfo) {
+        helpInfo.style.display = 'block';
+        helpInfo.style.visibility = 'visible';
+    }
+    
     if (document.readyState === 'loading') {
         if (document.addEventListener) {
             document.addEventListener('DOMContentLoaded', initializeApp);

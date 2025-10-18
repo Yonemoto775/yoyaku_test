@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テストページ</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>予約システムテストページ</h1>
+    
+    <div class="test-section">
+        <h2>1. ヘルプ情報の表示テスト</h2>
+        <div id="helpInfo" style="display:block; background-color:#e7f3ff; border:1px solid #b3d9ff; padding:15px; margin-bottom:20px; border-radius:4px; font-size:0.9em;">
+            <strong>設定方法:</strong><br>
+            1. Google Apps ScriptでWebアプリとして公開してください<br>
+            2. アクセス権限を「全員（匿名ユーザーを含む）」に設定してください<br>
+            3. スプレッドシートに「メニュー」シートを作成し、コース情報を入力してください<br>
+            <div style="margin-top:10px; font-size:0.8em; color:#666;">
+                ヘッダー行: A列「コース名」、B列「施術時間（分）」、C列「価格（円）」
+            </div>
+            <div style="margin-top:10px;">
+                <button type="button" onclick="testConnection()" style="padding:5px 10px; background-color:#007bff; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:10px;">
+                    接続テスト
+                </button>
+                <button type="button" onclick="testDirectAccess()" style="padding:5px 10px; background-color:#28a745; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:10px;">
+                    直接アクセステスト
+                </button>
+                <button type="button" onclick="testReservation()" style="padding:5px 10px; background-color:#dc3545; color:white; border:none; border-radius:3px; cursor:pointer;">
+                    予約テスト
+                </button>
+            </div>
+        </div>
+        <p>ヘルプ情報が表示されていますか？ <span id="helpStatus">確認中...</span></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 関数の存在確認</h2>
+        <p>testConnection関数: <span id="testConnectionStatus">確認中...</span></p>
+        <p>testDirectAccess関数: <span id="testDirectAccessStatus">確認中...</span></p>
+        <p>testReservation関数: <span id="testReservationStatus">確認中...</span></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 設定の確認</h2>
+        <p>GAS_API_URL: <span id="gasUrlStatus">確認中...</span></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 接続テスト結果</h2>
+        <div id="connectionResult">未実行</div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // テスト用の関数
+        function runTests() {
+            console.log('Running tests...');
+            
+            // ヘルプ情報の表示確認
+            var helpInfo = document.getElementById('helpInfo');
+            var helpStatus = document.getElementById('helpStatus');
+            if (helpInfo && helpInfo.style.display !== 'none') {
+                helpStatus.textContent = '✅ 表示されています';
+                helpStatus.style.color = 'green';
+            } else {
+                helpStatus.textContent = '❌ 表示されていません';
+                helpStatus.style.color = 'red';
+            }
+            
+            // 関数の存在確認
+            var testConnectionStatus = document.getElementById('testConnectionStatus');
+            if (typeof testConnection === 'function') {
+                testConnectionStatus.textContent = '✅ 定義されています';
+                testConnectionStatus.style.color = 'green';
+            } else {
+                testConnectionStatus.textContent = '❌ 定義されていません';
+                testConnectionStatus.style.color = 'red';
+            }
+            
+            var testDirectAccessStatus = document.getElementById('testDirectAccessStatus');
+            if (typeof testDirectAccess === 'function') {
+                testDirectAccessStatus.textContent = '✅ 定義されています';
+                testDirectAccessStatus.style.color = 'green';
+            } else {
+                testDirectAccessStatus.textContent = '❌ 定義されていません';
+                testDirectAccessStatus.style.color = 'red';
+            }
+            
+            var testReservationStatus = document.getElementById('testReservationStatus');
+            if (typeof testReservation === 'function') {
+                testReservationStatus.textContent = '✅ 定義されています';
+                testReservationStatus.style.color = 'green';
+            } else {
+                testReservationStatus.textContent = '❌ 定義されていません';
+                testReservationStatus.style.color = 'red';
+            }
+            
+            // 設定の確認
+            var gasUrlStatus = document.getElementById('gasUrlStatus');
+            if (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) {
+                gasUrlStatus.textContent = '✅ ' + GAS_API_URL;
+                gasUrlStatus.style.color = 'green';
+            } else {
+                gasUrlStatus.textContent = '❌ 設定されていません';
+                gasUrlStatus.style.color = 'red';
+            }
+        }
+        
+        // ページ読み込み後にテスト実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runTests);
+        } else {
+            runTests();
+        }
+        
+        // 接続テスト用の関数（オーバーライド）
+        function testConnection() {
+            var result = document.getElementById('connectionResult');
+            result.innerHTML = '接続テストを実行中...';
+            
+            if (typeof GAS_API_URL === 'undefined' || !GAS_API_URL) {
+                result.innerHTML = '❌ GAS_API_URLが設定されていません';
+                result.className = 'error';
+                return;
+            }
+            
+            var testUrl = GAS_API_URL + '?action=getInitialData';
+            console.log('Testing connection to:', testUrl);
+            
+            if (typeof fetch === 'undefined') {
+                result.innerHTML = '❌ fetch APIが利用できません';
+                result.className = 'error';
+                return;
+            }
+            
+            fetch(testUrl, {
+                method: 'GET',
+                mode: 'cors',
+                cache: 'no-cache'
+            })
+            .then(function(response) {
+                console.log('Response status:', response.status);
+                if (response.ok) {
+                    result.innerHTML = '✅ 接続成功 (Status: ' + response.status + ')';
+                    result.className = 'success';
+                } else {
+                    result.innerHTML = '❌ 接続失敗 (Status: ' + response.status + ')';
+                    result.className = 'error';
+                }
+            })
+            .catch(function(error) {
+                console.error('Connection test error:', error);
+                result.innerHTML = '❌ 接続エラー: ' + error.message;
+                result.className = 'error';
+            });
+        }
+        
+        function testDirectAccess() {
+            if (typeof GAS_API_URL === 'undefined' || !GAS_API_URL) {
+                alert('GAS_API_URLが設定されていません');
+                return;
+            }
+            var testUrl = GAS_API_URL + '?action=getInitialData';
+            window.open(testUrl, '_blank');
+        }
+        
+        function testReservation() {
+            if (typeof GAS_API_URL === 'undefined' || !GAS_API_URL) {
+                alert('GAS_API_URLが設定されていません');
+                return;
+            }
+            
+            var testData = {
+                name: 'テスト太郎',
+                phone: '090-1234-5678',
+                email: 'test@example.com',
+                startTime: new Date().toISOString(),
+                courseDuration: 90,
+                courseNameOnly: 'ジェルネイル',
+                coursePrice: 8000,
+                menuType: 'ジェルネイル',
+                visitStatus: '初回',
+                isNailOff: false,
+                lengthExtensionCount: 0,
+                lengthExtensionPrice: 0,
+                isStaffAssignment: false,
+                selectedStaff: '',
+                staffAssignmentPrice: 0,
+                imageFile: null
+            };
+            
+            console.log('Testing reservation with data:', testData);
+            
+            fetch(GAS_API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(testData)
+            })
+            .then(function(response) {
+                console.log('Reservation response status:', response.status);
+                return response.text();
+            })
+            .then(function(text) {
+                console.log('Reservation response text:', text);
+                try {
+                    var result = JSON.parse(text);
+                    alert('予約テスト結果: ' + (result.success ? '成功' : '失敗') + '\nメッセージ: ' + result.message);
+                } catch (e) {
+                    alert('予約テスト結果: JSON解析エラー\nレスポンス: ' + text.substring(0, 200));
+                }
+            })
+            .catch(function(error) {
+                console.error('Reservation test error:', error);
+                alert('予約テストエラー: ' + error.message);
+            });
+        }
+    </script>
+</body>
+</html>

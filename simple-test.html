@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプルテスト</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        #helpInfo { display: block !important; background-color: #e7f3ff; border: 1px solid #b3d9ff; padding: 15px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>シンプルテストページ</h1>
+    
+    <div id="helpInfo">
+        <strong>テストボタン:</strong><br>
+        <button onclick="testConnection()">接続テスト</button>
+        <button onclick="testDirectAccess()">直接アクセステスト</button>
+        <button onclick="testReservation()">予約テスト</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script src="config.js"></script>
+    <script>
+        function testConnection() {
+            var result = document.getElementById('result');
+            result.innerHTML = '接続テスト中...';
+            
+            if (typeof GAS_API_URL === 'undefined' || !GAS_API_URL) {
+                result.innerHTML = '❌ GAS_API_URLが設定されていません';
+                return;
+            }
+            
+            var testUrl = GAS_API_URL + '?action=getInitialData';
+            console.log('Testing:', testUrl);
+            
+            fetch(testUrl, { method: 'GET', mode: 'cors' })
+            .then(response => {
+                console.log('Status:', response.status);
+                if (response.ok) {
+                    result.innerHTML = '✅ 接続成功 (Status: ' + response.status + ')';
+                } else {
+                    result.innerHTML = '❌ 接続失敗 (Status: ' + response.status + ')';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                result.innerHTML = '❌ エラー: ' + error.message;
+            });
+        }
+        
+        function testDirectAccess() {
+            if (typeof GAS_API_URL === 'undefined' || !GAS_API_URL) {
+                alert('GAS_API_URLが設定されていません');
+                return;
+            }
+            var testUrl = GAS_API_URL + '?action=getInitialData';
+            window.open(testUrl, '_blank');
+        }
+        
+        function testReservation() {
+            if (typeof GAS_API_URL === 'undefined' || !GAS_API_URL) {
+                alert('GAS_API_URLが設定されていません');
+                return;
+            }
+            
+            var testData = {
+                name: 'テスト太郎',
+                phone: '090-1234-5678',
+                email: 'test@example.com',
+                startTime: new Date().toISOString(),
+                courseDuration: 90,
+                courseNameOnly: 'ジェルネイル',
+                coursePrice: 8000,
+                menuType: 'ジェルネイル',
+                visitStatus: '初回',
+                isNailOff: false,
+                lengthExtensionCount: 0,
+                lengthExtensionPrice: 0,
+                isStaffAssignment: false,
+                selectedStaff: '',
+                staffAssignmentPrice: 0,
+                imageFile: null
+            };
+            
+            console.log('Testing reservation:', testData);
+            
+            fetch(GAS_API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(testData)
+            })
+            .then(response => {
+                console.log('Reservation status:', response.status);
+                return response.text();
+            })
+            .then(text => {
+                console.log('Reservation response:', text);
+                try {
+                    var result = JSON.parse(text);
+                    alert('予約テスト結果: ' + (result.success ? '成功' : '失敗') + '\nメッセージ: ' + result.message);
+                } catch (e) {
+                    alert('予約テスト結果: JSON解析エラー\nレスポンス: ' + text.substring(0, 200));
+                }
+            })
+            .catch(error => {
+                console.error('Reservation error:', error);
+                alert('予約テストエラー: ' + error.message);
+            });
+        }
+        
+        // ページ読み込み時に設定を確認
+        window.onload = function() {
+            console.log('GAS_API_URL:', typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : 'undefined');
+        };
+    </script>
+</body>
+</html>
