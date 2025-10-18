@@ -32,6 +32,11 @@ function initializeApp() {
             console.warn('Google Apps Script Web API URL not configured, using fallback data');
         }
         showConnectionStatus('Google Apps Script Web APIのURLが設定されていません。デフォルトメニューで動作します。', 'warning', 'config.jsファイルのGAS_API_URLが設定されていません');
+        // ヘルプ情報を表示する
+        var helpInfo = document.getElementById('helpInfo');
+        if (helpInfo) {
+            helpInfo.style.display = 'block';
+        }
         initializeWithFallbackData(calendarEl);
         return;
     }
