@@ -41,12 +41,28 @@ function doGet(e) {
 // POSTリクエストの処理（予約作成）
 function doPost(e) {
   try {
+    // リクエストデータのログ出力
+    console.log('POST request received');
+    console.log('postData:', e.postData);
+    console.log('parameters:', e.parameter);
+    
+    if (!e.postData || !e.postData.contents) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ error: 'No data received' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
     const data = JSON.parse(e.postData.contents);
+    console.log('Parsed data:', data);
+    
     const result = createReservation(data);
+    console.log('Reservation result:', result);
+    
     return ContentService
       .createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
+    console.error('Error in doPost:', error);
     return ContentService
       .createTextOutput(JSON.stringify({ error: error.toString() }))
       .setMimeType(ContentService.MimeType.JSON);

@@ -85,8 +85,11 @@
                 <button type="button" onclick="testConnection()" style="padding:5px 10px; background-color:#007bff; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:10px;">
                     接続テスト
                 </button>
-                <button type="button" onclick="if(typeof testDirectAccess === 'function') { testDirectAccess(); } else { alert('testDirectAccess関数が定義されていません。'); }" style="padding:5px 10px; background-color:#28a745; color:white; border:none; border-radius:3px; cursor:pointer;" id="directTestBtn">
+                <button type="button" onclick="if(typeof testDirectAccess === 'function') { testDirectAccess(); } else { alert('testDirectAccess関数が定義されていません。'); }" style="padding:5px 10px; background-color:#28a745; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:10px;" id="directTestBtn">
                     直接アクセステスト
+                </button>
+                <button type="button" onclick="if(typeof testReservation === 'function') { testReservation(); } else { alert('testReservation関数が定義されていません。'); }" style="padding:5px 10px; background-color:#dc3545; color:white; border:none; border-radius:3px; cursor:pointer;" id="reservationTestBtn">
+                    予約テスト
                 </button>
             </div>
         </div>

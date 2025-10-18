@@ -571,39 +571,75 @@ function fetchBusySlots(successCallback, failureCallback) {
 function fetchCreateReservation(reservationData, submitButton) {
     var url = GAS_API_URL;
     
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('Sending reservation data to:', url);
+        console.log('Reservation data:', reservationData);
+    }
+    
+    // fetch APIが利用可能かチェック
+    if (typeof fetch === 'undefined') {
+        alert('このブラウザでは予約機能が利用できません。最新のブラウザをご利用ください。');
+        submitButton.disabled = false;
+        submitButton.textContent = '予約を確定する';
+        return;
+    }
+    
     fetch(url, {
         method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(reservationData)
     })
     .then(function(response) {
+        if (typeof console !== 'undefined' && console.log) {
+            console.log('Reservation response status:', response.status);
+            console.log('Reservation response statusText:', response.statusText);
+            console.log('Reservation response headers:', response.headers);
+        }
+        
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
         }
-        return response.json();
+        return response.text(); // まずテキストとして取得
     })
-    .then(function(result) {
-        alert(result.message);
-        if (result.success) {
-            hideReservationModal();
-            resetForm();
-            if (calendar && calendar.refetchEvents) {
-                calendar.refetchEvents();
-            }
+    .then(function(text) {
+        if (typeof console !== 'undefined' && console.log) {
+            console.log('Reservation response text:', text);
         }
-        submitButton.disabled = false;
-        submitButton.textContent = '予約を確定する';
+        
+        try {
+            var result = JSON.parse(text);
+            alert(result.message);
+            if (result.success) {
+                hideReservationModal();
+                resetForm();
+                if (calendar && calendar.refetchEvents) {
+                    calendar.refetchEvents();
+                }
+            }
+            submitButton.disabled = false;
+            submitButton.textContent = '予約を確定する';
+        } catch (parseError) {
+            throw new Error('JSON解析エラー: ' + parseError.message + '\nレスポンス: ' + text.substring(0, 200));
+        }
     })
     .catch(function(error) {
         if (typeof console !== 'undefined' && console.error) {
             console.error('Failed to create reservation:', error);
+            console.error('Error name:', error.name);
+            console.error('Error message:', error.message);
         }
+        
         var errorMessage = 'エラーが発生しました';
-        if (error && error.message) {
+        if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            errorMessage = 'ネットワークエラーまたはCORSエラーです。Google Apps Scriptの設定を確認してください。';
+        } else if (error.message) {
             errorMessage += ': ' + error.message;
         }
+        
         alert(errorMessage);
         submitButton.disabled = false;
         submitButton.textContent = '予約を確定する';
@@ -639,6 +675,38 @@ function testDirectAccess() {
         }
         alert('新しいタブを開けませんでした: ' + error.message);
     }
+}
+
+// 予約テスト関数
+function testReservation() {
+    if (!GAS_API_URL || GAS_API_URL === '' || GAS_API_URL === 'undefined') {
+        alert('Google Apps Script Web APIのURLが設定されていません。');
+        return;
+    }
+    
+    var testData = {
+        name: 'テストユーザー',
+        email: 'test@example.com',
+        phone: '090-1234-5678',
+        startTime: new Date().toISOString(),
+        courseDuration: 60,
+        courseNameOnly: 'テストコース',
+        coursePrice: 5000,
+        menuType: 'HAND',
+        visitStatus: '初回',
+        isNailOff: false,
+        lengthExtensionCount: 0,
+        lengthExtensionPrice: 0,
+        isStaffAssignment: false,
+        selectedStaff: '',
+        staffAssignmentPrice: 0
+    };
+    
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('Testing reservation with data:', testData);
+    }
+    
+    fetchCreateReservation(testData, { disabled: false, textContent: 'テスト中...' });
 }
 
 // 接続テスト関数
